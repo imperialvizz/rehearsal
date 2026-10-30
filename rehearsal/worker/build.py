@@ -6,7 +6,6 @@ from pathlib import Path
 
 from sqlalchemy import select
 
-from .. import telemetry
 from ..compiler.pipeline import AppInput, BuildOptions, Compiler
 from ..config import settings
 from ..db import queue
@@ -38,6 +37,7 @@ def handle(ctx: JobContext) -> dict:
         checkpoint=ctx.checkpoint,
         workdir=workdir,
         chain=p.get("model") or settings().model_compiler,
+        reasoner=p.get("model") or settings().model_reasoner,  # one model named for the build runs every role
         log=lambda t, m, d: ctx.log(t, m, d),
         save=ctx.save_checkpoint,
         heartbeat=ctx.check,
@@ -46,8 +46,7 @@ def handle(ctx: JobContext) -> dict:
         destroy=destroy_owned,
     )
     try:
-        with telemetry.span("world_build", "CHAIN", session_id=ctx.job_id, application=app_row["name"], job=ctx.job_id):
-            pkg = compiler.run()
+        pkg = compiler.run()
     except BaseException as exc:
         if not isinstance(exc, (queue.LeaseLost, queue.JobPaused)) and p.get("keep_sandbox_on_failure") is not True:
             compiler.cleanup()
@@ -113,7 +112,7 @@ def handle_validate(ctx: JobContext) -> dict:
             scenario = ScenarioSpec.model_validate(spec)
             report = validate_scenario(inst, manifest, snap, variables, scenario, log=lambda m: ctx.log("validate.step", m))
             if report.ok and p.get("live_audit", True):
-                report.live = live_audit(inst, manifest, snap, variables, scenario, agent_chain=settings().model_agent, auditor_chain=settings().model_compiler, check=ctx.check, add_cost=ctx.add_cost)
+                report.live = live_audit(inst, manifest, snap, variables, scenario, agent_chain=settings().model_agent, auditor_chain=settings().model_reasoner, check=ctx.check, add_cost=ctx.add_cost)
                 if report.live["cause"] in UNFAIR:
                     report.ok = False
                     report.reasons.append(f"a live agent could not pass this job for a reason that is not its fault ({report.live['cause']}): {report.live.get('evidence', '')}")
