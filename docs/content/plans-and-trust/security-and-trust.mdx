@@ -2,7 +2,7 @@
 title: Security and trust
 description: What a practice world can and cannot reach, how checks stay read-only, where keys and passwords are kept, and what an operator must do.
 audience: Security reviewers and buyers
-last_reviewed: 2026-10-11
+last_reviewed: 2026-11-03
 ---
 
 This page states what the product does, as the code of version 0.1.4 does it. Where something is not built or not
@@ -82,7 +82,8 @@ the server removes the values of its own secrets from it: every setting whose na
 | Goes to | What | When |
 |---|---|---|
 | Your model provider | The prompts of the World Compiler, the simulated customer and the agents: parts of the application's source, the fictional data, and the conversation | During a build, a run, an improvement and a re-check |
-| Tavily (web search) | Search queries the World Compiler writes about the application (its name, what it does, its workflows) and the addresses of public pages to read. Never the source, the data or any secret | During a build, only when the server has a `TAVILY_API_KEY` |
+| Tavily (web search) | Search queries the World Compiler writes about the application (its name, what it does, its workflows), the addresses of public pages to read, and, when the same application error keeps coming back during a build, the application's name with that error's message. Never the source, the data or any secret | During a build, only when the server has a `TAVILY_API_KEY` |
+| Your own agent, at the URL you gave | The conversation and the offered tools of each turn, and the API key you stored for that endpoint | During a run, only for an agent profile that names an endpoint |
 | A payment provider | The workspace owner's email address, the organisation's name, and what you buy | Only on a server with plans turned on, when you buy a plan or a top-up |
 
 The source of your application is sent to the model provider in parts, because the World Compiler reads it to
@@ -91,6 +92,12 @@ build the world. If your source must not go to a model provider, run your own se
 Web pages that the research step reads are treated as data, never as instructions: the researcher can only search
 and read, cannot reach the sandbox or any secret, and may cite only pages it was shown. Every job it inspired still
 passes the same validation as any other.
+
+An agent profile can name your own agent's URL instead of a model. The worker that calls it sits inside the server's
+network, so the URL must use https, and an address that resolves to a private, loopback, link-local or otherwise
+internal network (a cloud metadata service, the database) is refused, when the profile is created and again before
+every call. A server of your own can allow private addresses with `REHEARSAL_ALLOW_PRIVATE_AGENT_URLS`. The endpoint's
+API key is stored sealed, encrypted with the server's session secret, and the profile keeps only the credential's id.
 
 ## AI assistants
 
