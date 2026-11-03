@@ -34,7 +34,7 @@ const TASKS: [string, string][] = [
   ["Improve an agent and compare versions", "/guides/improve-an-agent"],
   ["Test an agent I wrote myself", "/guides/bring-your-own-agent"],
   ["Check every pull request in CI", "/guides/use-rehearsal-in-ci"],
-  ["Run my own server", "/self-hosting/install-with-docker-compose"],
+  ["Run my own server", "/self-hosting/install-from-source"],
 ];
 
 const LOOK_UP: [string, string][] = [

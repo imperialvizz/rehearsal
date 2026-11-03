@@ -75,14 +75,14 @@ then `job_status` until the agent is packaged.
 
 | File | What it is |
 |---|---|
-| `agent.py` | The agent, as one Python program. It runs on NVIDIA Nemotron through Nebius Token Factory and calls your application's real API |
+| `agent.py` | The agent, as one Python program. It runs on Muse Spark through the Meta Model API and calls your application's real API |
 | `agent.json` | Its instructions, and each tool with the HTTP request it makes |
 | `PROOF.md` | Its scores on `train`, `dev` and `holdout` jobs, how each round went, and the failure causes that remain |
 | `README.md` | How to run it |
 
 ```bash
 pip install openai httpx
-export NEBIUS_API_KEY=...
+export MODEL_API_KEY=...
 export APP_URL=https://your-app.example
 export APP_AUTH="Authorization: token ..."
 python agent.py

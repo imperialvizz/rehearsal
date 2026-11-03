@@ -65,14 +65,9 @@ def test_a_release_with_problems_exits_but_a_dry_run_only_warns(tmp_path, pypi, 
         gate.check_version(repo)
 
 
-def test_files_the_package_and_image_build_from_exist():
-    """A moved file only warns in `python -m build` (PyPI then shows an empty page) and breaks `docker build`."""
+def test_files_the_package_builds_from_exist():
+    """A moved file only warns in `python -m build`, and PyPI then shows an empty page."""
     import tomllib
 
     readme = tomllib.loads((ROOT / "rehearsal/py/pyproject.toml").read_text())["project"]["readme"]
     assert (ROOT / "rehearsal/py" / readme).is_file(), f"rehearsal/py/pyproject.toml readme {readme} does not exist"
-    for line in (ROOT / "Dockerfile").read_text().splitlines():
-        parts = line.split()
-        if parts[:1] == ["COPY"] and not any(p.startswith("--from") for p in parts):
-            for source in parts[1:-1]:
-                assert (ROOT / source).exists(), f"Dockerfile copies {source}, which does not exist"

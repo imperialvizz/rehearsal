@@ -31,13 +31,13 @@ def test_the_packaged_agent_plays_the_customer_role_with_only_its_tools():
     tool = spec["tools"][0]
     assert tool["method"] == "PATCH" and tool["path"] == "/api/tickets/{id}" and "Guidance: Read it first." in tool["description"]
     assert {p["name"]: p["location"] for p in tool["params"]} == {"id": "path", "status": "body", "notify": "query"}
-    assert spec["model"].startswith("nvidia/") and spec["services"] == ["app"]
+    assert spec["model"].startswith("muse-spark") and spec["services"] == ["app"]
 
 
 def load_agent(tmp_path, monkeypatch, spec):
     (tmp_path / "agent.json").write_text(json.dumps(spec))
     (tmp_path / "agent.py").write_text(factory.AGENT_PY)
-    monkeypatch.setenv("NEBIUS_API_KEY", "test")
+    monkeypatch.setenv("MODEL_API_KEY", "test")
     monkeypatch.setenv("APP_URL", "https://desk.example/")
     monkeypatch.setenv("APP_AUTH", "Authorization: token abc")
     module_spec = importlib.util.spec_from_file_location("packaged_agent", tmp_path / "agent.py")

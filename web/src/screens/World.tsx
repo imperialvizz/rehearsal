@@ -158,7 +158,7 @@ function MakeAgent({ worldVersionId, worldName, jobs }: { worldVersionId: string
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Make a verified agent for this world</DialogTitle>
-          <DialogDescription>Rehearsal writes the agent from the world&apos;s tools, the owner&apos;s rules and the research on real use, rehearses it on every train and dev job, improves it round by round, proves it on held-out jobs, and packages it: a program that runs on Nemotron and calls your application&apos;s API, with its proof report.</DialogDescription>
+          <DialogDescription>Rehearsal writes the agent from the world&apos;s tools, the owner&apos;s rules and the research on real use, rehearses it on every train and dev job, improves it round by round, proves it on held-out jobs, and packages it: a program that runs on Meta&apos;s Muse Spark and calls your application&apos;s API, with its proof report.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-2"><Label htmlFor="agent-name">Name</Label><Input id="agent-name" value={name} onChange={(e) => setName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} /></div>
         <div className="grid gap-2">

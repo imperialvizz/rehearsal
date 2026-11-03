@@ -19,7 +19,7 @@
 //   DOCS_ASSISTANT_PER_DAY      questions answered in a day, for everyone together (500)
 //   DOCS_ASSISTANT_BEHIND_PROXY 1 behind a reverse proxy: limit by the visitor address it forwards (X-Forwarded-For)
 //
-// A provider's key is read under the name the server uses (NEBIUS_API_KEY, OPENROUTER_API_KEY, ...). Keys are
+// A provider's key is read under the name the server uses (MODEL_API_KEY, FIREWORKS_API_KEY, ...). Keys are
 // never printed, and never sent anywhere but to their own provider.
 import { createServer } from "node:http";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -45,7 +45,7 @@ function dotenv(path) {
 }
 
 // the chain the server falls back to when nothing is set, from rehearsal/py/rehearsal/config.py
-const SERVER_DEFAULT_CHAIN = "groq:openai/gpt-oss-120b,openai:gpt-5-mini,anthropic:claude-haiku-4-5,google:gemini-2.5-flash,openrouter:openai/gpt-oss-120b";
+const SERVER_DEFAULT_CHAIN = "meta:muse-spark-1.3,fireworks:accounts/fireworks/models/muse-spark-open,baseten:meta-models/muse-spark-open";
 
 export function settings(env = process.env) {
   const files = { ...dotenv(env.REHEARSAL_ENV_FILE ?? resolve(docsRoot, "..", ".env")), ...dotenv(join(docsRoot, ".env.local")) };
@@ -53,7 +53,7 @@ export function settings(env = process.env) {
   const modal = [get("MODAL_PROXY_TOKEN_ID"), get("MODAL_PROXY_TOKEN_SECRET")];
   // where each provider answers and which key it takes: the same table as PROVIDERS in rehearsal/py/rehearsal/agents/llm.py
   const providers = {
-    nebius: { base: "https://api.tokenfactory.nebius.com/v1", key: get("NEBIUS_API_KEY") },
+    meta: { base: "https://api.meta.ai/v1", key: get("MODEL_API_KEY") },
     openrouter: { base: "https://openrouter.ai/api/v1", key: get("OPENROUTER_API_KEY") },
     groq: { base: "https://api.groq.com/openai/v1", key: get("GROQ_API_KEY") },
     google: { base: "https://generativelanguage.googleapis.com/v1beta/openai", key: get("GOOGLE_API_KEY") },
@@ -64,8 +64,8 @@ export function settings(env = process.env) {
     deepseek: { base: "https://api.deepseek.com/v1", key: get("DEEPSEEK_API_KEY") },
     together: { base: "https://api.together.xyz/v1", key: get("TOGETHER_API_KEY") },
     fireworks: { base: "https://api.fireworks.ai/inference/v1", key: get("FIREWORKS_API_KEY") },
+    baseten: { base: "https://inference.baseten.co/v1", key: get("BASETEN_API_KEY") },
     cerebras: { base: "https://api.cerebras.ai/v1", key: get("CEREBRAS_API_KEY") },
-    nvidia: { base: "https://integrate.api.nvidia.com/v1", key: get("NVIDIA_API_KEY") },
     litellm: { base: get("LITELLM_BASE_URL") || "https://litellm.vision.aivar.app/v1", key: get("LITELLM_API_KEY") },
     modal: { base: get("MODAL_BASE_URL"), key: modal[0] && modal[1] ? modal.join(".") : "" },
     local: { base: get("REHEARSAL_LOCAL_BASE_URL") || "http://127.0.0.1:8001/v1", key: get("REHEARSAL_LOCAL_API_KEY") || "local" },
@@ -74,7 +74,7 @@ export function settings(env = process.env) {
   const chain = get("DOCS_ASSISTANT_MODEL") || get("REHEARSAL_MODEL_AGENT") || SERVER_DEFAULT_CHAIN;
   const entries = chain
     .split(",")
-    .map((part) => part.trim())
+    .map((part) => part.split("#")[0].trim())
     .filter(Boolean)
     .map((part) => {
       const at = part.indexOf(":");
@@ -94,7 +94,7 @@ export function settings(env = process.env) {
       .filter(Boolean),
     perMinute: number("DOCS_ASSISTANT_PER_MINUTE", 10),
     perDay: number("DOCS_ASSISTANT_PER_DAY", 500),
-    // behind a reverse proxy (Caddy) every request comes from the proxy; it adds the visitor's address last to
+    // behind a reverse proxy every request comes from the proxy; it adds the visitor's address last to
     // X-Forwarded-For, so the per-address limit uses that. Set only when nothing but the proxy can reach this service.
     behindProxy: get("DOCS_ASSISTANT_BEHIND_PROXY") === "1",
   };

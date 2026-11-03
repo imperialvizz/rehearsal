@@ -9,7 +9,7 @@ so every tool call the agent makes is one action in the episode.
     python examples/agents/langgraph_react.py --world WORLD_VERSION_ID --agent AGENT_ID --split dev
 
 Rehearsal: REHEARSAL_URL, REHEARSAL_API_KEY. The agent's own model (any OpenAI-compatible endpoint):
-AGENT_BASE_URL, AGENT_API_KEY, AGENT_MODEL (default: Nebius, NEBIUS_API_KEY, zai-org/GLM-5.3-Flash,
+AGENT_BASE_URL, AGENT_API_KEY, AGENT_MODEL (default: the Meta Model API, MODEL_API_KEY, muse-spark-1.3,
 the same model as the baseline profile, so a comparison measures the framework, not the model).
 """
 
@@ -37,9 +37,9 @@ DONE = ("finished", "failed", "cancelled")
 
 def model() -> ChatOpenAI:
     return ChatOpenAI(
-        base_url=os.environ.get("AGENT_BASE_URL", "https://api.tokenfactory.nebius.com/v1"),
-        api_key=os.environ.get("AGENT_API_KEY") or os.environ["NEBIUS_API_KEY"],
-        model=os.environ.get("AGENT_MODEL", "zai-org/GLM-5.3-Flash"),
+        base_url=os.environ.get("AGENT_BASE_URL", "https://api.meta.ai/v1"),
+        api_key=os.environ.get("AGENT_API_KEY") or os.environ["MODEL_API_KEY"],
+        model=os.environ.get("AGENT_MODEL", "muse-spark-1.3"),
         temperature=0.2,
         timeout=180,
     )

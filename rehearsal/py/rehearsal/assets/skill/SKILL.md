@@ -122,7 +122,7 @@ Rules:
 
 ## Workflow: No agent yet
 
-When the user has a world but no agent, offer `make_agent(world_version_id)`: Rehearsal drafts an agent from the world, hardens it with the fix loop, proves it on holdout, and packages a zip (agent.py on Nemotron that calls the app's API, agent.json, PROOF.md). Ask first with the episode count. When the job succeeds, give the held-out score from the result and tell the user to download `artifact_id` (`rehearsal artifacts download ID agent.zip` or the console) and to keep CONFIRM_WRITES on against a real application.
+When the user has a world but no agent, offer `make_agent(world_version_id)`: Rehearsal drafts an agent from the world, hardens it with the fix loop, proves it on holdout, and packages a zip (agent.py on Muse Spark that calls the app's API, agent.json, PROOF.md). Ask first with the episode count. When the job succeeds, give the held-out score from the result and tell the user to download `artifact_id` (`rehearsal artifacts download ID agent.zip` or the console) and to keep CONFIRM_WRITES on against a real application.
 
 ## Workflow: Improve
 

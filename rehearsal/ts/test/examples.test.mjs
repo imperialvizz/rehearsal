@@ -13,7 +13,7 @@ test("an example holds the published world, the train jobs only, and the finishe
   const s = await stub({
     "GET /v1/world-versions/wv_1": () => ({
       version: 2, content_hash: "h1", capabilities: { tools: 1 }, validation: { repairs: [{ outcome: "repaired" }], rejected: { x: "unfair" } },
-      provenance: { url: "https://example.test/shop", commit: "abc", spent_usd: 3.456, tokens: 12345, compiler_chain: "nebius:nemotron" },
+      provenance: { url: "https://example.test/shop", commit: "abc", spent_usd: 3.456, tokens: 12345, compiler_chain: "meta:muse-spark-1.3" },
       manifest: { name: "shop", services: [{ name: "web" }], roles: [{ name: "support" }], tools: [{ name: "refund", method: "POST", path: "/refunds", mutating: true, roles: ["support"] }] },
     }),
     "GET /v1/world-versions/wv_1/scenarios": () => [scenario("a", "train"), scenario("b", "holdout"), scenario("c", "dev"), scenario("d", "train", "rejected")],

@@ -31,7 +31,7 @@ rehearsal login                               # opens the console in your browse
 rehearsal apps add my-app --git https://github.com/you/app --commit <sha> \
   --image web=registry.example.com/app@sha256:<digest>
 rehearsal build <app_id> --watch            # compile a practice world
-rehearsal profiles create support-agent --prompt-file prompt.md --model nebius:deepseek-ai/DeepSeek-V4.1-Flash
+rehearsal profiles create support-agent --prompt-file prompt.md --model meta:muse-spark-1.3#medium
 rehearsal eval <world_version_id> --profile <profile_id> --watch
 ```
 

@@ -1,0 +1,60 @@
+---
+title: Install from source
+description: Run the API, the console and a worker on your own machine from a clone of the repository, create the first admin key and your sign-in, and check that a build can start.
+audience: Operators
+label: self-hosted
+last_reviewed: 2026-11-03
+time: 20 minutes
+needs: Linux or WSL 2 with Docker, Python 3.11 to 3.13, Node 22 and pnpm 10, and a model provider key
+---
+
+At the end of this page the console opens, you are signed in, and a worker is running, so a build can start.
+
+## Install the package and the console
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+python -m pip install -e './rehearsal/py[server,dev]'
+cp .env.example .env
+(cd web && pnpm install --frozen-lockfile && pnpm build)
+```
+
+In `.env`, set `REHEARSAL_SESSION_SECRET` to the output of `python -c "import secrets; print(secrets.token_hex(32))"`,
+and `MODEL_API_KEY` to your Meta Model API key, from [dev.meta.ai](https://dev.meta.ai). Keys stay in `.env`, which
+git ignores. The last command builds the console once.
+
+## Start the database and create the first admin
+
+```bash
+rehearsal up
+rehearsal bootstrap
+```
+
+`rehearsal up` starts PostgreSQL in Docker on 127.0.0.1:5433 and migrates it. `rehearsal bootstrap` prints the
+project id and an admin API key, shown once. Then create your console login, with a password of 10 or more
+characters:
+
+```bash
+export REHEARSAL_URL=http://127.0.0.1:7800 REHEARSAL_API_KEY=rh_...
+rehearsal users add you@example.com --project prj_...
+```
+
+## Start the server and a worker
+
+```bash
+rehearsal serve
+```
+
+In a second terminal:
+
+```bash
+rehearsal worker
+```
+
+Open http://127.0.0.1:7800 and sign in. Nothing is built or evaluated while no worker runs.
+
+## Next
+
+<LinkCards>
+  <LinkCard href="/self-hosting/troubleshooting" title="Troubleshooting">Each message you can meet, why, and the fix.</LinkCard>
+</LinkCards>

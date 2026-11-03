@@ -39,6 +39,6 @@ def test_empty_chain_setting_means_the_default(monkeypatch):
     settings.cache_clear()
     s = settings()
     settings.cache_clear()
-    assert s.model_compiler.startswith("nebius:nvidia/nemotron-3-super") and "Nemotron-3-Ultra" in s.model_compiler
-    assert s.model_participant.startswith("nebius:nvidia/NVIDIA-Nemotron-3-Nano") and s.model_participant.endswith("#nothink")
-    assert s.model_reasoner.startswith("nebius:nvidia/Nemotron-3-Ultra") and s.model_improver == s.model_reasoner
+    assert s.model_compiler.startswith("meta:muse-spark-1.3#medium") and "fireworks:accounts/fireworks/models/muse-spark-open" in s.model_compiler
+    assert s.model_participant.startswith("meta:muse-spark-1.3#minimal")
+    assert s.model_reasoner.startswith("meta:muse-wonder-1.0#high,meta:muse-spark-1.3#xhigh") and s.model_improver == s.model_reasoner

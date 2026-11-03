@@ -72,7 +72,7 @@ Python: `from rehearsal.sdk import Rehearsal; rh = Rehearsal()` reads `REHEARSAL
 
 ### `create_agent(name, instructions="", model=None, bring_your_own=False)`
 - `instructions` becomes the system prompt. It may use `{actor_id}`, `{role}` and `{instructions}` (the job's role instructions). Without `{instructions}`, the job's role instructions are added at the end. Empty means the platform default.
-- `model`: a model chain on the server, for example `nebius:zai-org/GLM-5.3-Flash`. Leave it empty for the server default.
+- `model`: a model chain on the server, for example `meta:muse-spark-1.3#medium`. Leave it empty for the server default.
 - A second profile with the same name becomes version 2. Versions are kept, so results stay comparable.
 - CLI: `rehearsal profiles create NAME [--prompt-file FILE] [--model M] [--external]`.
 

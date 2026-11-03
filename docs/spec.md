@@ -50,7 +50,6 @@ The Python package is in `rehearsal/py/` (the paths below are inside it, and its
 | `rehearsal/ts/` (repository) | The npm package: TypeScript client, CLI and MCP server with the same commands and tools |
 | `web/` | Console (Next.js static export, served by the API) |
 | `docs/` | Documentation site (Fumadocs) and these planning documents |
-| `infra/` | Docker Compose stack, Caddy, AWS CloudFormation |
 
 ## 3. Data model
 
@@ -133,7 +132,7 @@ A worker restart resumes at the saved phase. A failed or stopped loop fails its 
 
 ### 7.2 Agent Factory (`factory` job)
 
-`POST /v1/factory` quotes at most repeats × ((rounds + 1) × train and dev jobs + 2 × held-out jobs) episodes. The job's checkpoint holds `factory.phase` (`draft`, `rehearse`, `harden`, `prove`, `package`, `done`). Draft: the agent designer (reasoner chain, role `factory.designer`) writes `{system_prompt, tool_guidance, rationale}` from the manifest's roles and tools, the idempotent tools, the owner's policies, the research digest and the failure causes; it is saved as a new profile version (`created_by: factory`). Rehearse: one owned run on train and dev. Harden: the fix loop (§7.1) with the draft and that run. Prove: when no round beat the draft, one owned run on held-out jobs for the draft alone. Package: a zip artifact (`kind: agent`) with `agent.json` (the instructions with placeholders filled for the customer-facing role, and that role's tools with their HTTP mapping), `agent.py` (an OpenAI-compatible tool loop on Nemotron that maps tool calls to requests on `APP_URL` with `APP_AUTH`, and asks before every write unless `CONFIRM_WRITES=0`), `PROOF.md` and `README.md`.
+`POST /v1/factory` quotes at most repeats × ((rounds + 1) × train and dev jobs + 2 × held-out jobs) episodes. The job's checkpoint holds `factory.phase` (`draft`, `rehearse`, `harden`, `prove`, `package`, `done`). Draft: the agent designer (reasoner chain, role `factory.designer`) writes `{system_prompt, tool_guidance, rationale}` from the manifest's roles and tools, the idempotent tools, the owner's policies, the research digest and the failure causes; it is saved as a new profile version (`created_by: factory`). Rehearse: one owned run on train and dev. Harden: the fix loop (§7.1) with the draft and that run. Prove: when no round beat the draft, one owned run on held-out jobs for the draft alone. Package: a zip artifact (`kind: agent`) with `agent.json` (the instructions with placeholders filled for the customer-facing role, and that role's tools with their HTTP mapping), `agent.py` (an OpenAI-compatible tool loop on Muse Spark (Meta Model API) that maps tool calls to requests on `APP_URL` with `APP_AUTH`, and asks before every write unless `CONFIRM_WRITES=0`), `PROOF.md` and `README.md`.
 
 ### 7.3 Pull request checks (`rehearsal gate`)
 
@@ -156,7 +155,7 @@ The gate runs on the client. It resolves the candidate (a profile id, or a versi
 
 ## 10. Models and spending
 
-- One OpenAI-compatible client with fallback chains (`provider:model[#think|#nothink],...`) across 17 providers. The default for every role is NVIDIA Nemotron on Nebius Token Factory: `#think` and `#nothink` set `chat_template_kwargs.enable_thinking` per entry. Roles: compiler (`REHEARSAL_MODEL_COMPILER`, Super then Ultra), reasoner for job design, validation investigation, build repair and the live audit (`_REASONER`, Ultra then Super), agent (`_AGENT`, Super then Ultra), simulated customer (`_PARTICIPANT`, Nano then Super, reasoning off), improvement (`_IMPROVER`, the reasoner chain). Rate limits, credit errors, server errors and timeouts move to the next entry. Each call has a 180-second limit and a 10-second connect timeout.
+- One OpenAI-compatible client with fallback chains (`provider:model[#effort],...`) across 17 providers. The default for every role is Meta's Muse models on the Meta Model API, falling back to Muse Spark Open on Fireworks and Baseten: `#minimal` to `#max` set `reasoning_effort` per entry. Roles: compiler (`REHEARSAL_MODEL_COMPILER`, Muse Spark at medium), reasoner for job design, validation investigation, build repair and the live audit (`_REASONER`, Muse Wonder at high, then Muse Spark at xhigh), agent (`_AGENT`, Muse Spark at medium), simulated customer (`_PARTICIPANT`, Muse Spark at minimal), improvement (`_IMPROVER`, the reasoner chain). Rate limits, credit errors, server errors and timeouts move to the next entry. Each call has a 180-second limit and a 10-second connect timeout.
 - Prices come from the provider's reported cost, its price list, a pinned price file, or OpenRouter's listing of the vendor or host. A job does not start if any model in its chain has no known price.
 - Every job has a spending cap and every workspace a monthly allowance.
 
@@ -167,12 +166,11 @@ Plans (Free, Pro, Team, Enterprise) set applications, builds and episodes per mo
 ## 12. Observability
 
 - **Timelines:** every build, episode and improvement run writes its steps to the event log in the same transaction as the change it describes; the console shows them live. Every summary and recorded action passes through secret masking first.
-- **Usage by role:** each model call adds its role, model, reasoning flag, tokens, time and cost to the running job's usage (a context variable shared by compiler lanes); a succeeded job stores it in `result.models`. A run's `models` merges its shards.
+- **Usage by role:** each model call adds its role, model, reasoning effort, tokens, time and cost to the running job's usage (a context variable shared by compiler lanes); a succeeded job stores it in `result.models`. A run's `models` merges its shards.
 
-## 13. Deployment
+## 13. Running it
 
-- **Compose stack** (`infra/compose.full.yaml`): migrate, API with console, workers, docs assistant, Caddy for HTTPS; optional local PostgreSQL. The worker receives only the settings it uses.
-- **Production** (`infra/aws/ec2.yaml`): an always-on small machine serves the API, console and assistant; a larger worker machine starts when a job is due and stops after 15 idle minutes; both share data on EFS; PostgreSQL on Supabase through its IPv4 session pooler; docs on Vercel.
+- **One machine, from source:** `rehearsal up` starts PostgreSQL in Docker and migrates it, `rehearsal serve` runs the API with the console, and `rehearsal worker` takes builds and evaluations; start more workers to do more at once. Rehearsal is not deployed as a hosted service from this repository.
 
 ## 14. Testing
 

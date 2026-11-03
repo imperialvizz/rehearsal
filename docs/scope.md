@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Project** | Rehearsal |
-| **Models** | NVIDIA Nemotron on Nebius Token Factory |
+| **Models** | Meta's Muse models: Muse Spark and Muse Wonder on the Meta Model API, Muse Spark Open on Fireworks and Baseten |
 | **Document** | Scope (step 1 of 3: scope → [PRD](prd.md) → [spec](spec.md)) |
 | **Status** | Agreed 2026-10-09; revised 2026-10-27 (decisions D8 to D10, scope items 8 and 9, criteria S7 and S8) |
 
@@ -41,11 +41,11 @@ The scope was set in a flipped-interaction session: the coding agent asked, the 
 | D3 | How do we know the compiler generalises? | One application (Easy!Appointments) is **held out** and never inspected during development. |
 | D4 | Who decides pass or fail? | **Read-only checks on the application's database** and a journal of outside effects. No language model grades outcomes. |
 | D5 | Is model training in scope? | **No, paused.** Compile, evaluate, improve the prompt and compare first; training is future work. |
-| D6 | Which models run it? | **NVIDIA Nemotron** open models, served by **Nebius Token Factory**. |
+| D6 | Which models run it? | Meta's **Muse** models, on the **Meta Model API**, with the open weights of Muse Spark Open on Fireworks and Baseten as fallbacks. |
 | D7 | What does it run on? | A hosted service on free cloud credits, plus a package anyone can install and self-host. |
 | D8 | What is the product, in one line? | **CI for AI agents**: rehearse on a copy of the real application, fix what fails, and check every change before it merges. |
 | D9 | When does an automatic fix count? | Only when it verifies more episodes on train and dev **without** a new rule violation or false "done", and the best version is then proved on held-out jobs no round has seen. A tie is not a fix. |
-| D10 | Which model for which role? | Each role gets its own Nemotron chain: Ultra with reasoning for the roles that judge (designing and auditing jobs, improving agents), Super for the agent and most compiler work, Nano without reasoning for the simulated customer. |
+| D10 | Which model for which role? | Each role gets its own chain and reasoning effort: Muse Wonder for the roles that judge (designing and auditing jobs, improving agents), Muse Spark at medium for the agent and most compiler work, Muse Spark at minimal effort for the simulated customer. |
 | D11 | How do jobs stay realistic? | The compiler researches real use of the application on the web (Tavily) before planning jobs; findings are frozen into the world, so runs stay reproducible. |
 
 ## 5. In scope
@@ -85,7 +85,7 @@ The scope was set in a flipped-interaction session: the coding agent asked, the 
 | S3 | An improved agent version can be compared with the original on held-out jobs. |
 | S4 | A new user can go from sign-up to a first result using the docs alone. |
 | S5 | The hosted service is live, takes payments, and keeps every job under a spending cap. |
-| S6 | Every agent in Rehearsal runs on NVIDIA Nemotron through Nebius Token Factory. |
+| S6 | Every agent in Rehearsal runs on Meta's Muse models by default. |
 | S7 | The fix loop turns a failing agent into a version that verifies more, and shows the held-out comparison. |
 | S8 | A pull request that makes the agent worse fails its check, with a report that says why. |
 

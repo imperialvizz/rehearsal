@@ -17,7 +17,7 @@ Rehearsal is CI for AI agents. It runs your agent on a working copy of your real
 [![Docs](https://img.shields.io/badge/docs-docs.rehearsalkit.xyz-2b59d9)](https://docs.rehearsalkit.xyz)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2b59d9)](LICENSE)
 
-[Website](https://rehearsalkit.xyz) · [Documentation](https://docs.rehearsalkit.xyz) · [Quickstart](#quickstart) · [Nemotron on Nebius](#built-on-nvidia-nemotron-and-nebius-token-factory) · [Self-hosting](#self-hosting) · [Planning docs](#planning-docs) · [Report a bug](https://github.com/MitudruDutta/rehearsal/issues)
+[Website](https://rehearsalkit.xyz) · [Documentation](https://docs.rehearsalkit.xyz) · [Quickstart](#quickstart) · [Built on Muse](#built-on-metas-muse-models) · [Self-hosting](#self-hosting) · [Planning docs](#planning-docs) · [Report a bug](https://github.com/MitudruDutta/rehearsal/issues)
 
 <img src=".github/assets/rehearsal-hero.webp" alt="The Rehearsal landing page, replaying a real World Compiler build of Gitea" width="900">
 
@@ -38,7 +38,7 @@ Rehearsal tests the agent where it will actually work: on your application, thro
 - **Failures on purpose.** Requests time out after the change already went through, so blind retries show up as duplicates.
 - **Readiness verdict.** Ready to pilot, or not yet, with every measure linked to the episodes behind it.
 - **Why it failed, in plain words.** Every failed episode gets named causes read from the records ("acted on the old request", "did the same thing twice", "said done but was not"), with counts, the usual fix and the episodes behind each. The fix loop targets the most common ones.
-- **Agent Factory.** From a published world to a verified agent: Rehearsal drafts the agent from the world's tools, your policies and the research on real use, hardens it with the fix loop, proves it on held-out jobs, and packages it as a zip with a standalone `agent.py` (Nemotron on Token Factory, calling your application's real API, asking before every change) and a `PROOF.md` with every score.
+- **Agent Factory.** From a published world to a verified agent: Rehearsal drafts the agent from the world's tools, your policies and the research on real use, hardens it with the fix loop, proves it on held-out jobs, and packages it as a zip with a standalone `agent.py` (Muse Spark on the Meta Model API, calling your application's real API, asking before every change) and a `PROOF.md` with every score.
 - **Fix my agent.** A loop that writes the next agent version from failed training jobs, rehearses it, and keeps it only if it verifies more episodes without breaking a rule. Rejected ideas are shown to the next round. The best version is then proved against the original on held-out jobs that no round has seen.
 - **Pull request checks.** `rehearsal gate` and a GitHub Action rehearse a changed agent next to the version on `main` and fail the check on a broken rule or any regression.
 - **Bring your own agent.** Describe an agent with instructions and a model, give the URL of your own agent (any OpenAI-compatible endpoint), or drive episodes from your own code in any language through the episode API.
@@ -46,7 +46,7 @@ Rehearsal tests the agent where it will actually work: on your application, thro
 - **Ready-made worlds.** A world library lets any workspace rehearse agents on worlds that are already built, without building anything.
 - **Builds that do not burn money.** Tools are checked one at a time, a stuck step pauses itself, the build page shows what each step cost and why it is stuck, and a deploy that restarts workers never costs a build an attempt.
 - **Every step on the record.** Each build, rehearsal and improvement keeps its full timeline in Rehearsal: model calls, tool calls, checks, and what each one cost, broken down by role and model.
-- **NVIDIA Nemotron by default, any provider if you want.** Every role runs on Nemotron through Nebius Token Factory, routed by role, with reasoning switched on only where it pays. OpenAI, Anthropic, Google, Mistral, xAI, DeepSeek, Groq, Together, Fireworks, Cerebras, OpenRouter, a LiteLLM proxy, or any OpenAI-compatible endpoint also work, with fallback chains and spend caps.
+- **Meta's Muse models by default, any provider if you want.** Every role runs on Muse Spark or Muse Wonder through the Meta Model API, routed by role with its own reasoning effort, and falls back to the open weights of Muse Spark Open on Fireworks and Baseten. OpenAI, Anthropic, Google, Mistral, xAI, DeepSeek, Groq, Together, Cerebras, OpenRouter, a LiteLLM proxy, Modal, or any OpenAI-compatible endpoint also work, with fallback chains and spend caps.
 
 ## How it works
 
@@ -67,39 +67,53 @@ flowchart TD
 3. **Verify and fix.** Checks decide each outcome. The fix loop turns failures into better versions and keeps only the ones that verify more; the best one is proved on jobs it has never seen.
 4. **Guard every change.** A pull request that touches the agent is rehearsed next to `main` before it merges.
 
-## Built on NVIDIA Nemotron and Nebius Token Factory
+## Built on Meta's Muse models
 
-Rehearsal existed before October 2026; what changed since is listed below.
+Rehearsal existed before the Meta Global AI Developer Hackathon. What changed for it is [listed below](#what-changed-for-the-meta-hackathon).
 
-### How Rehearsal uses NVIDIA Nemotron and Nebius Token Factory
+### How Rehearsal uses Muse
 
-Every model call in Rehearsal goes to an NVIDIA Nemotron open model served by [Nebius Token Factory](https://nebius.com/token-factory), through its OpenAI-compatible API (`https://api.tokenfactory.nebius.com/v1`, `NEBIUS_API_KEY`). There are many roles, and they need different things, so each role has its own model chain:
+Every model call in Rehearsal goes to one of Meta's Muse models, through an OpenAI-compatible API. The roles need different things, so each role has its own model chain, and the `#effort` at the end of an entry becomes `reasoning_effort` on the request:
 
-| Role | What it does | Default chain | Reasoning |
-|---|---|---|---|
-| World Compiler (most roles) | Reads the source, runs the app in a sandbox, seeds data, writes tools and checks | Nemotron 3 Super, then Ultra | on |
-| Hard compiler roles | Designs jobs, investigates failed validations, repairs builds, audits jobs live | Nemotron 3 Ultra, then Super | on |
-| Agent under test | Does the job through the application's tools | Nemotron 3 Super, then Ultra | on |
-| Simulated customer | Talks to the agent, changes its mind mid-task | Nemotron 3 Nano, then Super | off |
-| Improvement step (fix loop) | Writes the next agent version from failures | Nemotron 3 Ultra, then Super | on |
+| Role | What it does | Default chain |
+|---|---|---|
+| World Compiler (most roles) | Reads the source, runs the app in a sandbox, seeds data, writes tools and checks | Muse Spark 1.3 at `medium` |
+| Hard compiler roles | Designs jobs, investigates failed validations, repairs builds, audits jobs live | Muse Wonder 1.0 at `high`, then Muse Spark 1.3 at `xhigh` |
+| Agent under test | Does the job through the application's tools | Muse Spark 1.3 at `medium` |
+| Simulated customer | Talks to the agent, changes its mind mid-task | Muse Spark 1.3 at `minimal` |
+| Improvement step (fix loop) | Writes the next agent version from failures | the hard-role chain |
+| Packaged agent (Agent Factory) | The `agent.py` that Rehearsal hands you | Muse Spark 1.3 at `medium` |
 
-- **Routed by role.** A chain is `provider:model[#think|#nothink]`, so `nebius:nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B#nothink` is Nano with reasoning off. The flag becomes `chat_template_kwargs.enable_thinking` on the request. The next model in a chain takes over when one fails.
-- **Reasoning only where it pays.** The simulated customer answers in one or two sentences. With reasoning off, a Nano customer turn went from 2.7 s and 191 output tokens to 0.5 s and 28 tokens in our measurement. Ultra is kept for the roles where a wrong answer costs a whole build: designing jobs and judging them.
-- **Measured per role.** Every call records its role, model, tokens, time and cost. The console shows a "Models by role" table for each build, run and fix loop, and `rehearsal prices` shows the price used for each configured model.
-- **Tool calls on every size.** Tool calling works on Nemotron 3 Nano, Super and Ultra; the agent under test and the compiler roles depend on it.
+When the Meta Model API fails or has no key, every chain falls back to the open weights of Muse Spark Open on Fireworks, then on Baseten.
 
-### Where Token Factory sped up the work
+- **Routed by role.** A chain is `provider:model[#effort]`, so `meta:muse-spark-1.3#minimal` is Muse Spark with the shortest reasoning pass. The next model in a chain takes over when one fails.
+- **Reasoning only where it pays.** The simulated customer answers in one or two sentences on every turn, so it reasons at `minimal`. Muse Wonder is kept for the roles where a wrong answer costs a whole build.
+- **Measured per role.** Every call records its role, model, effort, tokens, time and cost. The console shows a "Models by role" table for each build, run and fix loop, and `rehearsal prices` shows the price used for each configured model. Meta Model API prices are built in, so a spend cap holds from the first call.
 
-- **One provider entry instead of a migration.** Rehearsal already spoke the OpenAI chat format, so moving every role to Nemotron was a base URL, a key and five model chains. No prompt or tool schema had to change.
-- **Fast turns where speed matters.** The simulated customer talks on every turn of every episode. Nano with reasoning off answers in about 0.5 s and 28 output tokens instead of 2.7 s and 191 with reasoning on, so a rehearsal spends its time on the agent under test, not on the customer.
-- **Three sizes, one family, one key.** Ultra, Super and Nano share one API, one key and one tool-calling format. Routing a role to a bigger or smaller model is a one-line chain change, and a failing model hands over to the next one in its chain.
-- **Prices known before a job starts.** Per-token prices for each model let every build, evaluation and fix loop carry a spend cap from the first call, and let the console show what each build step and each role cost.
+### Which Meta product does what
+
+| Meta product | Where Rehearsal uses it |
+|---|---|
+| Meta Model API (`https://api.meta.ai/v1`, `MODEL_API_KEY`) | The default provider for every role |
+| Muse Spark 1.3 | Tool work, the agent under test, the simulated customer, and the packaged agent |
+| Muse Wonder 1.0 | The hardest World Compiler roles and the fix loop |
+| Muse Spark Open (open weights) | The fallback on Fireworks and Baseten, or on your own Modal endpoint through `MODAL_BASE_URL` |
+| Muse Glimmer (open weights) | Can serve any role or the packaged agent on your own machine, through the `local` provider (vLLM or llama.cpp) |
+| Muse Code | A bundle with the Rehearsal skill and MCP server, so Muse Code can build worlds and run rehearsals for you |
+
+### Use Rehearsal from Muse Code
+
+```bash
+muse skills install agent-plugin/providers/muse-code/skills/rehearsal --scope user
+```
+
+Then copy the `mcp_servers` block from [agent-plugin/providers/muse-code/settings.json](agent-plugin/providers/muse-code/settings.json) into `~/.config/muse/settings.json` and start a new session. Ask Muse Code to build a world, run an evaluation, or explain a failed episode.
 
 ### How Rehearsal uses Tavily
 
-[Tavily](https://tavily.com), the agentic search API that is now part of Nebius, is used in three places.
+[Tavily](https://tavily.com), the agentic search API, is used in three places.
 
-1. **Research before jobs are written.** Jobs written from source code alone can drift from what users really do. So every build has a research phase: a researcher role (on Nemotron) searches the web with the Tavily Search API and reads the best pages with the Extract API, then writes a brief of real user requests, documented rules and known pitfalls, each with its URL. The job planner must base at least half the jobs on that brief and may cite only pages the researcher was shown. For Gitea, 8 pages grounded 5 of the 9 jobs.
+1. **Research before jobs are written.** Jobs written from source code alone can drift from what users really do. So every build has a research phase: a researcher role (on Muse Spark) searches the web with the Tavily Search API and reads the best pages with the Extract API, then writes a brief of real user requests, documented rules and known pitfalls, each with its URL. The job planner must base at least half the jobs on that brief and may cite only pages the researcher was shown. For Gitea, 8 pages grounded 5 of the 9 jobs.
 2. **Setup notes from the application's own docs.** Before the runtime is planned, the compiler finds the application's documentation site from its README and asks Tavily, limited to that site, how the project says to run it in Docker. The builder and the seeder can also search and read docs pages themselves.
 3. **Errors that keep coming back.** When the same application error repeats during a build step (a failed start, a seed step, an image build), the compiler searches for that error the way a person would paste it into a search engine and hands what it finds to the model's next try. Rehearsal's own validation messages are never searched.
 
@@ -108,31 +122,16 @@ Every model call in Rehearsal goes to an NVIDIA Nemotron open model served by [N
 - **Safe with untrusted pages.** Page text is data, never instructions; the researcher can only search and read, cannot reach the sandbox or any secret, and every job it inspired passes the same five validation gates.
 - **Optional.** Without `TAVILY_API_KEY`, research and lookups are skipped and builds work as before.
 
-### Other Nebius tools
+### What changed for the Meta hackathon
 
-- **Tavily** (above) is Nebius's agentic search product; Rehearsal uses its Search and Extract APIs.
-- **Serverless AI Jobs** were evaluated for running world builds; the feedback below explains why builds stay on a VM with Docker for now.
+- **Every role moved to Meta's Muse models.** Muse Spark and Muse Wonder on the Meta Model API by default, with Muse Spark Open on Fireworks and Baseten as fallbacks.
+- **Reasoning effort per role.** A chain entry now ends in `#minimal`, `#low`, `#medium`, `#high`, `#xhigh` or `#max`, sent as `reasoning_effort`, in place of a vendor-specific thinking switch.
+- **Prices for the Meta Model API** built in, so `rehearsal prices`, spend caps and the "Models by role" table work without a pricing file.
+- **The Agent Factory packages agents that run on Muse Spark.**
+- **A Muse Code bundle** with the Rehearsal skill and MCP server.
+- **Runs from source on one machine**, with no deployment setup; see [Self-hosting](#self-hosting).
 
-### What changed in October 2026
-
-- **Nemotron on Nebius Token Factory became the default for every role.** Before, production ran on models behind a LiteLLM proxy and every World Compiler role shared one chain. Now each role has its own Nemotron chain with a reasoning switch, the hardest compiler roles run on Ultra, and usage is recorded per role.
-- **Fix my agent.** Before, the improvement step proposed one new version and left the checking to you. Now an `autofix` job runs rounds of propose, rehearse on train and dev, and keep only if better (more verified, no new rule violation or false completion), feeds rejected ideas to the next round, and proves the best version against the original on held-out jobs. It resumes from its checkpoint after a worker restart. API `POST /v1/autofix`, CLI `rehearsal autofix`, SDK `rh.profiles.autofix`, MCP tool `fix_agent`, and a console page with each round, its reason, its score, and the sentences it changed.
-- **Pull request checks.** `rehearsal gate` and a GitHub Action (`action.yml`) rehearse a changed agent next to the version on `main` and fail on a broken rule or a regression, with a Markdown report in the job summary.
-- **Models by role** in the console, for builds, runs and fix loops.
-- **Agent Factory.** A `factory` job drafts an agent from a published world, rehearses it, hardens it with the fix loop, proves it on held-out jobs and packages a runnable agent with its proof report. API `POST /v1/factory`, CLI `rehearsal factory`, SDK `rh.worlds.make_agent`, MCP tool `make_agent`, and a **Make an agent** button on the world page.
-- **Grounded worlds.** A new research phase uses Tavily to base jobs on how real people use the application, with the sources on every job. Later in the month Tavily also started reading setup notes from the application's docs and looking up application errors that repeat during a build.
-- **Failure analysis.** Named causes for every failed episode, on the run page, in `rehearsal runs failures`, in the MCP `run_results` tool, in the CI gate's report, and as input to the fix loop (train and dev only).
-- **Test any agent by URL, incidents, world library.** An agent profile can name your own agent's OpenAI-compatible endpoint (its key stored sealed, internal addresses refused); `POST /v1/world-versions/{id}/incidents` turns a production incident into a validated job; `REHEARSAL_LIBRARY_PROJECT` shares a project's worlds with every workspace.
-- **Builds that stop wasting money.** Tools verified one at a time, a no-progress brake that pauses a stuck step, spend per step and "why it is stuck" on the build page, early checks for host settings and unfinished installs, and workers that hand jobs back on restart.
-- **Cleanup.** Third-party tracing was removed; secret masking now lives in one module. Secret settings no longer appear in printed configuration. Next.js was upgraded to 16.4.2.
-
-### Feedback on Nebius and NVIDIA tools
-
-- **The OpenAI-compatible API made the switch a configuration change.** Rehearsal already spoke the OpenAI chat format, so adding Token Factory was one provider entry: a base URL and a key. Tool calling worked on Nano, Super and Ultra without changes to our tool schemas.
-- **The reasoning switch is the most useful knob.** `enable_thinking` per request let us run the same model family in a fast mode for chatty roles and a careful mode for judging roles. It has to go through `extra_body.chat_template_kwargs`, which is easy to miss; a top-level parameter, or a note in the quickstart, would help.
-- **Model ids are cased differently** (`nvidia/Nemotron-3-Ultra-550b-a55b`, `nvidia/nemotron-3-super-120b-a12b`, `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`). We copy them exactly; a consistent scheme would avoid typos in configuration.
-- **Clear per-token prices** let us put a spend cap on every job before it runs, from Nano at $0.06 / $0.24 per million tokens to Ultra at $1 / $3.
-- **Serverless AI Jobs did not fit our builds.** A world build starts the application's own containers in a sandbox, so a worker needs Docker. Serverless Jobs run one container, and the documentation does not describe privileged mode or a Docker socket, so our workers stay on a VM with Docker. Rootless or nested container support in Jobs would let each build run as its own job.
+Earlier changes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Quickstart
 
@@ -243,27 +242,14 @@ Then ask your assistant to build a world, run an evaluation, or explain a failed
 
 The server, workers and sandboxes run on Linux with Docker. The CLI and SDK run anywhere.
 
-**Requirements:** Python 3.11–3.13, Docker with Compose, PostgreSQL (local or managed, Supabase recommended), and a Nebius Token Factory key (`NEBIUS_API_KEY`) for the default Nemotron models, or a key for any other provider. Node 22 and pnpm 10 are needed only to build the console from source.
-
-### Docker Compose
-
-`infra/compose.full.yaml` runs the complete stack: migrations, the API with the console, workers, and optional HTTPS through Caddy.
-
-```bash
-cp infra/deploy.env.example infra/deploy.env      # database URL, session secret, model keys
-docker compose -f infra/compose.full.yaml --env-file infra/deploy.env up -d
-docker compose -f infra/compose.full.yaml --env-file infra/deploy.env exec api rehearsal bootstrap
-docker compose -f infra/compose.full.yaml --env-file infra/deploy.env up -d --scale worker=6
-```
-
-Add `--profile public` with `REHEARSAL_DOMAIN` set to serve HTTPS. The worker controls the host's Docker socket and runs application source, so use a dedicated machine. For arbitrary third-party repositories, use per-job VM isolation.
+**Requirements:** Python 3.11–3.13, Docker (for the local database and the sandboxes), and a Meta Model API key (`MODEL_API_KEY`, from [dev.meta.ai](https://dev.meta.ai)) for the default Muse models, or a key for any other provider. Node 22 and pnpm 10 are needed only to build the console from source.
 
 ### From source
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e './rehearsal/py[server,dev]'
-cp .env.example .env                                     # set REHEARSAL_SESSION_SECRET and NEBIUS_API_KEY
+cp .env.example .env                                     # set REHEARSAL_SESSION_SECRET and MODEL_API_KEY
 (cd web && pnpm install --frozen-lockfile && pnpm build) # build the console once
 
 rehearsal up                                             # PostgreSQL in Docker on 127.0.0.1:5433, then migrations
@@ -277,7 +263,7 @@ rehearsal worker                                         # builds and evaluation
 
 Generate the session secret with `python -c "import secrets; print(secrets.token_hex(32))"`. Keep keys in `.env`, which git ignores.
 
-The [self-hosting guide](https://docs.rehearsalkit.xyz/self-hosting) covers requirements, Docker Compose, upgrades, Windows and troubleshooting.
+The [self-hosting guide](https://docs.rehearsalkit.xyz/self-hosting) covers requirements, installing from source, Windows and troubleshooting.
 
 ## Configuration
 
@@ -287,8 +273,9 @@ Settings come from the environment, or from `.env` in the working directory. The
 |---|---|---|
 | `REHEARSAL_DATABASE_URL` | local PostgreSQL on port 5433 | Control-plane database |
 | `REHEARSAL_SESSION_SECRET` | development value | Signs console session cookies; set your own |
-| `REHEARSAL_MODEL_COMPILER`, `_REASONER`, `_AGENT`, `_PARTICIPANT`, `_IMPROVER` | NVIDIA Nemotron on Nebius Token Factory, routed by role | Model chains, `provider:model[#think\|#nothink][,...]` |
-| `NEBIUS_API_KEY` | none | Nebius Token Factory, for the default Nemotron models |
+| `REHEARSAL_MODEL_COMPILER`, `_REASONER`, `_AGENT`, `_PARTICIPANT`, `_IMPROVER` | Meta's Muse models, routed by role | Model chains, `provider:model[#effort][,...]` |
+| `MODEL_API_KEY` | none | Meta Model API, for the default Muse Spark and Muse Wonder models |
+| `FIREWORKS_API_KEY`, `BASETEN_API_KEY` | none | Fallback hosts for the open weights of Muse Spark Open |
 | `TAVILY_API_KEY` | none | Web research during builds; without it the research phase is skipped |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, ... | none | One key for each other provider the chains name |
 | `REHEARSAL_SIGNUP` | `open` | `closed` stops new workspaces from the sign-in page |
@@ -330,7 +317,7 @@ Rehearsal was planned before it was built, in three documents that build on each
 |---|---|
 | [Scope](docs/scope.md) | The problem, who it is for, the decisions from the planning interview, what is in and out of scope, and how success is measured |
 | [Product requirements](docs/prd.md) | Users, journeys, numbered functional and non-functional requirements, acceptance criteria, and release status |
-| [Technical specification](docs/spec.md) | Architecture, data model, the World Compiler, job validation, sandboxing, scoring, the job queue, interfaces, spending, deployment, and testing |
+| [Technical specification](docs/spec.md) | Architecture, data model, the World Compiler, job validation, sandboxing, scoring, the job queue, interfaces, spending, and testing |
 
 ## Status
 
@@ -338,14 +325,13 @@ Rehearsal is in early release (0.1.x). World builds, evaluations, the fix loop, 
 
 ## Built with
 
-- [NVIDIA Nemotron](https://www.nvidia.com/en-us/ai-data-science/foundation-models/nemotron/) open models (Nano, Super and Ultra) run every role in Rehearsal.
-- [Nebius Token Factory](https://nebius.com/token-factory) serves them.
-- [Tavily](https://tavily.com), part of Nebius, grounds every world in how real people use the application and helps builds past setup errors.
+- Meta's [Muse models](https://dev.meta.ai) (Muse Spark, Muse Wonder and the open-weight Muse Spark Open) run every role in Rehearsal, through the Meta Model API, Fireworks and Baseten.
+- [Tavily](https://tavily.com) grounds every world in how real people use the application and helps builds past setup errors.
 - FastAPI, SQLAlchemy and PostgreSQL for the control plane; Docker for sandboxes; Next.js for the console and documentation.
 
 ## Contributing
 
-Issues and pull requests are welcome. Run the unit tests and the console typecheck before opening a pull request, and keep secrets out of commits: `.env` and `infra/deploy.env` are ignored by git.
+Issues and pull requests are welcome. Run the unit tests and the console typecheck before opening a pull request, and keep secrets out of commits: `.env` is ignored by git.
 
 ## License
 

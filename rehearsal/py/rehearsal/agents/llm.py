@@ -5,9 +5,9 @@ server errors, and timeouts move to the next entry; the reply records which
 provider/model actually answered so evaluations stay attributable.
 Provider keys are read server-side only.
 
-An entry may end in ``#think`` or ``#nothink`` to switch a reasoning model's
-thinking on or off for that entry only (sent as ``chat_template_kwargs``, the
-switch NVIDIA Nemotron models read), so a fast role skips the reasoning tokens.
+An entry may end in ``#minimal``, ``#low``, ``#medium``, ``#high``, ``#xhigh``
+or ``#max`` to set ``reasoning_effort`` for that entry only (the switch Meta's
+Muse models read), so a fast role spends few reasoning tokens.
 
 While a job runs, ``usage`` collects calls, tokens, cost and latency per role.
 """
@@ -33,7 +33,7 @@ from .. import pricing
 log = logging.getLogger(__name__)
 
 PROVIDERS: dict[str, tuple[str, str]] = {
-    "nebius": ("https://api.tokenfactory.nebius.com/v1", "NEBIUS_API_KEY"),
+    "meta": ("https://api.meta.ai/v1", "MODEL_API_KEY"),  # Meta Model API (Muse Spark, Muse Wonder); keys at dev.meta.ai
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY"),
     "google": ("https://generativelanguage.googleapis.com/v1beta/openai/", "GOOGLE_API_KEY"),
@@ -44,8 +44,8 @@ PROVIDERS: dict[str, tuple[str, str]] = {
     "deepseek": ("https://api.deepseek.com/v1", "DEEPSEEK_API_KEY"),
     "together": ("https://api.together.xyz/v1", "TOGETHER_API_KEY"),
     "fireworks": ("https://api.fireworks.ai/inference/v1", "FIREWORKS_API_KEY"),
+    "baseten": ("https://inference.baseten.co/v1", "BASETEN_API_KEY"),
     "cerebras": ("https://api.cerebras.ai/v1", "CEREBRAS_API_KEY"),
-    "nvidia": ("https://integrate.api.nvidia.com/v1", "NVIDIA_API_KEY"),  # NVIDIA's hosted models (build.nvidia.com)
     "litellm": ("https://litellm.vision.aivar.app/v1", "LITELLM_API_KEY"),  # a LiteLLM proxy (Claude, Amazon Nova); LITELLM_BASE_URL overrides
     "modal": ("", "MODAL_PROXY_TOKEN_ID"),  # base from MODAL_BASE_URL; key is "<token id>.<token secret>"
     "local": ("", "REHEARSAL_LOCAL_API_KEY"),  # base from REHEARSAL_LOCAL_BASE_URL (vLLM etc.)
@@ -80,7 +80,7 @@ class LLMReply:
     attempts: list[str] = field(default_factory=list)
     raw_tool_calls: list[dict[str, Any]] = field(default_factory=list)  # provider metadata (e.g. thought signatures)
     cost_source: str = "unknown"  # where the price came from: provider-reported, a price list, or an override
-    thinking: bool | None = None  # the reasoning switch sent with the call (None: the model's default)
+    effort: str | None = None  # the reasoning_effort sent with the call (None: the model's default)
     latency_ms: int = 0
 
     def assistant_message(self) -> dict[str, Any]:
@@ -99,11 +99,11 @@ class LLMReply:
         return msg
 
 
-THINKING = {"think": True, "nothink": False}
+EFFORTS = ("minimal", "low", "medium", "high", "xhigh", "max")
 
 
-def parse_chain(chain: str) -> list[tuple[str, str, bool | None]]:
-    """``provider:model[#think|#nothink]`` entries as (provider, model, thinking)."""
+def parse_chain(chain: str) -> list[tuple[str, str, str | None]]:
+    """``provider:model[#effort]`` entries as (provider, model, reasoning effort)."""
     entries = []
     for part in chain.split(","):
         part = part.strip()
@@ -113,9 +113,9 @@ def parse_chain(chain: str) -> list[tuple[str, str, bool | None]]:
         provider, sep, model = part.partition(":")
         if not sep or provider not in PROVIDERS or not model:
             raise LLMError(f"bad model entry {part!r}; expected provider:model with provider in {sorted(PROVIDERS)}")
-        if hashed and flag not in THINKING:
-            raise LLMError(f"bad reasoning switch #{flag} in {part!r}; use #think or #nothink")
-        entries.append((provider, model, THINKING[flag] if hashed else None))
+        if hashed and flag not in EFFORTS:
+            raise LLMError(f"bad reasoning effort #{flag} in {part!r}; use one of " + ", ".join(f"#{e}" for e in EFFORTS))
+        entries.append((provider, model, flag if hashed else None))
     if not entries:
         raise LLMError("empty model chain")
     return entries
@@ -131,7 +131,7 @@ def _row() -> dict[str, Any]:
 
 def record_call(role: str | None, name: str, *, prompt_tokens: int = 0, completion_tokens: int = 0, cost_usd: float = 0.0, latency_ms: int = 0) -> None:
     """Adds one call to the running job's per-role usage (compiler lanes share one dict across threads). `name` is
-    `provider:model[#think|#nothink]` for a model, or a service such as `tavily:search`."""
+    `provider:model[#effort]` for a model, or a service such as `tavily:search`."""
     acc = usage.get()
     if acc is None or not role:
         return
@@ -146,7 +146,7 @@ def record_call(role: str | None, name: str, *, prompt_tokens: int = 0, completi
 
 
 def _record(role: str | None, reply: "LLMReply") -> None:
-    name = f"{reply.provider}:{reply.model}" + ("" if reply.thinking is None else "#think" if reply.thinking else "#nothink")
+    name = f"{reply.provider}:{reply.model}" + (f"#{reply.effort}" if reply.effort else "")
     record_call(role, name, prompt_tokens=reply.prompt_tokens, completion_tokens=reply.completion_tokens, cost_usd=reply.cost_usd, latency_ms=reply.latency_ms)
 
 
@@ -302,7 +302,7 @@ def chat(
 
 
 def _try_chain(
-    entries: list[tuple[str, str, bool | None]],
+    entries: list[tuple[str, str, str | None]],
     messages: list[dict[str, Any]],
     tools: list[dict[str, Any]] | None,
     tool_choice: str | None,
@@ -315,7 +315,7 @@ def _try_chain(
     """One pass over the chain: (reply, every failure was a rate limit/timeout, retry hints)."""
     only_limits = True
     waits: list[float | None] = []
-    for provider, model, thinking in entries:
+    for provider, model, effort in entries:
         if _billing_blocked.get(provider, 0) > time.time():
             only_limits = False
             continue
@@ -342,8 +342,8 @@ def _try_chain(
             extra: dict[str, Any] = {}
             if provider == "openrouter":
                 extra["usage"] = {"include": True}
-            if thinking is not None:
-                extra["chat_template_kwargs"] = {"enable_thinking": thinking}
+            if effort is not None:
+                extra["reasoning_effort"] = effort
             if extra:
                 kwargs["extra_body"] = extra
             started = time.perf_counter()
@@ -400,7 +400,7 @@ def _try_chain(
                 cost_usd=cost,
                 cost_source=source,
                 raw_tool_calls=[tc.model_dump(exclude_none=True) for tc in choice.tool_calls or []],
-                thinking=thinking,
+                effort=effort,
                 latency_ms=int((time.perf_counter() - started) * 1000),
             )
             return reply, False, waits

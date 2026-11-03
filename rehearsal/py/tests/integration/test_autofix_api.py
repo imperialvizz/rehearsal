@@ -96,10 +96,10 @@ def test_a_run_shows_model_usage_per_role_over_every_shard(db):
     wv = _world(project)
     prof = client.post("/v1/agent-profiles", headers=auth, json={"name": "support"}).json()["id"]
     run = client.post("/v1/evaluations", headers=auth, json={"world_version_id": wv, "profile_ids": [prof], "repeats": 2}).json()["run_id"]
-    row = {"calls": 2, "prompt_tokens": 10, "completion_tokens": 4, "cost_usd": 0.002, "latency_ms": 800, "models": {"nebius:m#nothink": 2}}
+    row = {"calls": 2, "prompt_tokens": 10, "completion_tokens": 4, "cost_usd": 0.002, "latency_ms": 800, "models": {"meta:m#low": 2}}
     with session() as s:
         shards = queue.run_jobs(s, run)
         for job in shards:
             job.result = {"models": {"agent": row}}
     models = client.get(f"/v1/runs/{run}", headers=auth).json()["models"]
-    assert models["agent"]["calls"] == 2 * len(shards) and models["agent"]["models"] == {"nebius:m#nothink": 2 * len(shards)}
+    assert models["agent"]["calls"] == 2 * len(shards) and models["agent"]["models"] == {"meta:m#low": 2 * len(shards)}

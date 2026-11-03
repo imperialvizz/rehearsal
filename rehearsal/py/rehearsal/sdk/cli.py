@@ -440,7 +440,7 @@ def _main(argv: list[str] | None = None) -> None:
 
         print(f"Rehearsal API on http://{args.host}:{args.port}, database {_db_host(settings().database_url)}", flush=True)
 
-        # uvicorn trusts X-Forwarded-For/-Proto from FORWARDED_ALLOW_IPS (compose sets it for Caddy), so client addresses are real
+        # uvicorn trusts X-Forwarded-For/-Proto from FORWARDED_ALLOW_IPS (set it when a reverse proxy is in front), so client addresses are real
         uvicorn.run("rehearsal.api.app:app", host=args.host, port=args.port, log_level="info", timeout_graceful_shutdown=5)
     elif args.cmd == "worker":
         from ..worker.main import run_worker
@@ -643,7 +643,7 @@ def _main(argv: list[str] | None = None) -> None:
             m = r["market"]
             charged = f"${b['input_per_m']:.3f}/${b['output_per_m']:.3f} per 1M ({b['source']}, {b['as_of']})" if b else "unknown (add it to pricing.yaml)"
             ref = f"{m['hosts']} hosts, input ${m['input_per_m']['min']:.3f}-{m['input_per_m']['max']:.3f}, output ${m['output_per_m']['min']:.3f}-{m['output_per_m']['max']:.3f}" if m else "no market listing"
-            mode = {True: " (thinking on)", False: " (thinking off)"}.get(r.get("thinking"), "")
+            mode = f" (reasoning {r['effort']})" if r.get("effort") else ""
             print(f"{r['purpose']:<12} {r['provider']}:{r['model']}{mode}\n  charged at: {charged}\n  market:     {ref}")
     elif args.cmd == "export-example":
         from .examples import export_example

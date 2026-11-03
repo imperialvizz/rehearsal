@@ -139,7 +139,7 @@ export function NowCaption({ ev, fallback }: { ev: RhEvent | null; fallback: str
 }
 
 const ROLES: Record<string, string> = { agent: "Agent under test", customer: "Simulated customer", improver: "Improvement step", "compiler.auditor": "Compiler: live audit", "research.web": "Web research" };
-const PROVIDERS: Record<string, string> = { tavily: "Tavily", nebius: "Nebius Token Factory", openrouter: "OpenRouter", litellm: "LiteLLM", groq: "Groq", local: "local", custom: "custom endpoint" };
+const PROVIDERS: Record<string, string> = { tavily: "Tavily", meta: "Meta Model API", fireworks: "Fireworks", baseten: "Baseten", openrouter: "OpenRouter", litellm: "LiteLLM", groq: "Groq", local: "local", custom: "custom endpoint" };
 
 /** Model calls, average time, tokens and spend for each role of a job or run, from its `models` usage record. */
 export function ModelsByRole({ models, what }: { models?: Record<string, any> | null; what: string }) {

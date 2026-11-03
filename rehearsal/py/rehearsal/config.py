@@ -93,12 +93,15 @@ def settings() -> Settings:
     quiet = env("REHEARSAL_QUIET_HOURS_UTC", "18:00-02:00")
     if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d", quiet):
         raise ValueError(f"REHEARSAL_QUIET_HOURS_UTC must look like 18:00-02:00, not {quiet!r}")
-    # NVIDIA Nemotron on Nebius Token Factory, routed by role: Ultra reasons where mistakes are expensive, Super does the
-    # heavy tool work, Nano with thinking off plays the customer, whose replies are short and must be fast.
-    ultra, super_, nano = ("nebius:nvidia/Nemotron-3-Ultra-550b-a55b", "nebius:nvidia/nemotron-3-super-120b-a12b",
-                           "nebius:nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B")
-    default_reasoner = f"{ultra}#think,{super_}#think"
-    default_chain = f"{super_}#think,{ultra}#think"
+    # Meta's Muse models, routed by role through reasoning effort: the Meta Model API first, then the open weights of
+    # Muse Spark Open on Fireworks and Baseten (Baseten does not document reasoning_effort, so its entry keeps the
+    # model's default). The hardest roles (designing, judging and repairing jobs, proposing a better agent) start on
+    # Muse Wonder, where a wrong answer costs a whole build; tool work runs on Muse Spark at medium; the simulated
+    # customer, whose replies are short and must be fast, on Muse Spark at the lowest level.
+    spark, fireworks, baseten = ("meta:muse-spark-1.3", "fireworks:accounts/fireworks/models/muse-spark-open",
+                                 "baseten:meta-models/muse-spark-open")
+    default_reasoner = f"meta:muse-wonder-1.0#high,{spark}#xhigh,{fireworks}#xhigh,{baseten}"
+    default_chain = f"{spark}#medium,{fireworks}#medium,{baseten}"
     return Settings(
         database_url=env(
             "REHEARSAL_DATABASE_URL", "postgresql+psycopg://rehearsal:rehearsal@127.0.0.1:5433/rehearsal"
@@ -108,7 +111,7 @@ def settings() -> Settings:
         source_roots=roots,
         model_compiler=env("REHEARSAL_MODEL_COMPILER") or default_chain,
         model_agent=env("REHEARSAL_MODEL_AGENT") or default_chain,
-        model_participant=env("REHEARSAL_MODEL_PARTICIPANT") or f"{nano}#nothink,{super_}#nothink",
+        model_participant=env("REHEARSAL_MODEL_PARTICIPANT") or f"{spark}#minimal,{fireworks}#low,{baseten}",
         model_improver=env("REHEARSAL_MODEL_IMPROVER") or env("REHEARSAL_MODEL_REASONER") or default_reasoner,
         model_reasoner=env("REHEARSAL_MODEL_REASONER") or default_reasoner,
         kaggle_api_token=env("KAGGLE_API_TOKEN") or None,

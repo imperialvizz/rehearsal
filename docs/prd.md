@@ -154,7 +154,7 @@ This document turns the [scope](scope.md) into requirements. The [spec](spec.md)
 | S3 | `rehearsal improve` produces a new version and `rehearsal compare` shows both runs on held-out jobs. |
 | S4 | The docs' quickstarts take a new user to a first result. |
 | S5 | rehearsalkit.xyz serves the console, accepts payments, and refuses to start an unpriced job. |
-| S6 | Each role's model calls go to NVIDIA Nemotron models on Nebius Token Factory. |
+| S6 | Each role's model calls go to Meta's Muse models: the Meta Model API first, then Muse Spark Open on Fireworks and Baseten. |
 | S7 | `rehearsal autofix` returns every round with its score and decision, and the held-out scores of the original and the best version. |
 | S8 | `rehearsal gate` exits 1 with a report when the change verifies less than the baseline or breaks a rule, and exits 2, not 1, when the run cannot start. |
 

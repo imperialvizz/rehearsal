@@ -104,7 +104,7 @@ def chat_endpoint(url: str, model: str, key: str | None, messages: list[dict[str
         content=choice.content or "", tool_calls=calls, provider="endpoint", model=model or "agent",
         prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0, completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
         cost_usd=0.0, cost_source="your endpoint", raw_tool_calls=[tc.model_dump(exclude_none=True) for tc in choice.tool_calls or []],
-        thinking=None, latency_ms=int((time.perf_counter() - started) * 1000),
+        effort=None, latency_ms=int((time.perf_counter() - started) * 1000),
     )
     llm.record_call(role, f"endpoint:{urlparse(url).hostname}", prompt_tokens=reply.prompt_tokens, completion_tokens=reply.completion_tokens,
                     latency_ms=reply.latency_ms)

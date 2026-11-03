@@ -11,15 +11,13 @@ last_reviewed: 2026-10-11
 | You need | Detail |
 |---|---|
 | **A Linux machine with Docker** | Docker Engine with the Compose plugin. Use a machine that runs nothing else |
-| **A PostgreSQL database** | A managed one (recommended), or the PostgreSQL 16 container that the Compose file can start |
+| **A PostgreSQL database** | The PostgreSQL 16 container that `rehearsal up` starts, or a managed one |
 | **A model provider key** | One or more. Without a key, no build and no run can work |
 | **Memory for sandboxes** | Each sandbox uses 0.3 to 1.5 GB. Plan for the number you run at once |
-| **A domain name**, for a public server | Its DNS record points at the machine. The Compose file gets the HTTPS certificate |
 
 ## Operating system
 
-**Run the server on Linux.** The project's own tests run on Ubuntu 24.04, and the container image is built on
-Debian.
+**Run the server on Linux.** The project's own tests run on Ubuntu 24.04.
 
 | System | Server, workers and sandboxes | CLI, Python client and MCP server |
 |---|---|---|
@@ -77,10 +75,10 @@ measured for this page: watch it after the first build.
 Rehearsal needs PostgreSQL. It holds all records and it is the queue of work, so every worker and the API connect
 to it all the time.
 
-- **A managed database** is the default of the Compose file. Use one in the same region as the machine. Give
-  Rehearsal its own role, and a schema of its own, not `public`.
-- **A local database** is one option of the Compose file away: `--profile localdb` starts PostgreSQL 16 in a
+- **A local database** is the default: with no `REHEARSAL_DATABASE_URL`, `rehearsal up` starts PostgreSQL 16 in a
   container on the same host.
+- **A managed database** works too. Use one in the same region as the machine. Give Rehearsal its own role, and a
+  schema of its own, not `public`.
 
 A managed database limits connections. Each process (the API and each worker) keeps a pool. Set
 `REHEARSAL_DB_POOL_SIZE` and `REHEARSAL_DB_MAX_OVERFLOW` so that the processes together stay well under the limit.
@@ -92,11 +90,14 @@ the database is never idle.
 ## A model provider key
 
 The World Compiler, the simulated customer and the agents you describe with instructions all call a language
-model. By default they all run on **NVIDIA Nemotron** open models through **Nebius Token Factory**, so one key is
-enough: `NEBIUS_API_KEY`. Any other provider below works too.
+model. By default they all run on **Meta's Muse Spark** through the **Meta Model API**, so one key is enough:
+`MODEL_API_KEY`, from [dev.meta.ai](https://dev.meta.ai). With `FIREWORKS_API_KEY` or `BASETEN_API_KEY` too, a role
+falls back to the open weights of **Muse Spark Open** on that host. Any other provider below works too.
 
 | Provider | Key |
 |---|---|
+| Meta Model API | `MODEL_API_KEY` |
+| Baseten | `BASETEN_API_KEY` |
 | OpenAI | `OPENAI_API_KEY` |
 | Anthropic | `ANTHROPIC_API_KEY` |
 | Google (Gemini) | `GOOGLE_API_KEY` |
@@ -107,26 +108,24 @@ enough: `NEBIUS_API_KEY`. Any other provider below works too.
 | Together AI | `TOGETHER_API_KEY` |
 | Fireworks AI | `FIREWORKS_API_KEY` |
 | Cerebras | `CEREBRAS_API_KEY` |
-| Nebius | `NEBIUS_API_KEY` |
-| NVIDIA | `NVIDIA_API_KEY` |
 | OpenRouter (many vendors behind one key) | `OPENROUTER_API_KEY` |
 | A LiteLLM proxy | `LITELLM_API_KEY` and `LITELLM_BASE_URL` |
 | A model server of your own (vLLM, Ollama) | see [Configuration](/reference/configuration#providers) |
 
 Which model does what is set by **model chains**, one per role. A chain is a list of `provider:model`, tried in
-order, and a provider without a key is skipped. An entry may end in `#think` or `#nothink` to switch a reasoning
-model's thinking on or off for that entry only.
+order, and a provider without a key is skipped. An entry may end in `#minimal`, `#low`, `#medium`, `#high`,
+`#xhigh` or `#max` to set the model's `reasoning_effort` for that entry only.
 
 | Role | Setting | Default |
 |---|---|---|
-| World Compiler: inspect, build, seed, write tools | `REHEARSAL_MODEL_COMPILER` | Nemotron 3 Super, thinking on |
-| World Compiler: design, judge and repair jobs | `REHEARSAL_MODEL_REASONER` | Nemotron 3 Ultra, thinking on |
-| Agents without a model of their own | `REHEARSAL_MODEL_AGENT` | Nemotron 3 Super, thinking on |
-| The simulated customer | `REHEARSAL_MODEL_PARTICIPANT` | Nemotron 3 Nano, thinking off |
+| World Compiler: inspect, build, seed, write tools | `REHEARSAL_MODEL_COMPILER` | Muse Spark 1.3, effort medium |
+| World Compiler: design, judge and repair jobs | `REHEARSAL_MODEL_REASONER` | Muse Wonder 1.0, effort high, then Muse Spark 1.3, effort xhigh |
+| Agents without a model of their own | `REHEARSAL_MODEL_AGENT` | Muse Spark 1.3, effort medium |
+| The simulated customer | `REHEARSAL_MODEL_PARTICIPANT` | Muse Spark 1.3, effort minimal |
 | Proposing a better agent | `REHEARSAL_MODEL_IMPROVER` | the reasoner's chain |
 
 ```text
-REHEARSAL_MODEL_PARTICIPANT=nebius:nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B#nothink,groq:openai/gpt-oss-20b
+REHEARSAL_MODEL_PARTICIPANT=meta:muse-spark-1.3#minimal,fireworks:accounts/fireworks/models/muse-spark-open#low
 ```
 
 A job starts only when the server knows the price of its models: run `rehearsal prices` to see them.
@@ -142,5 +141,5 @@ Without a key for the models in the chains, a build fails in its first phase wit
 ## Next
 
 <LinkCards>
-  <LinkCard href="/self-hosting/install-with-docker-compose" title="Install with Docker Compose">Start the server, create the first admin, and sign in.</LinkCard>
+  <LinkCard href="/self-hosting/install-from-source" title="Install from source">Start the server, create the first admin, and sign in.</LinkCard>
 </LinkCards>

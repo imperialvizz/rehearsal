@@ -11,7 +11,6 @@ from unittest.mock import Mock, call
 
 import httpx
 import pytest
-import yaml
 
 from rehearsal.core.contracts import CheckSpec, ServiceSpec, WorldManifest
 from rehearsal.evaluator import probes
@@ -210,22 +209,6 @@ def test_destroy_tolerates_missing_outer_bridge(instance, monkeypatch):
     instance.destroy()
     assert not any(c.args[0][:3] == ["docker", "network", "disconnect"] for c in run.call_args_list)
     run.assert_called_with(["docker", "network", "rm", "rh-test-int", "rh-test-ext"], check=False)
-
-
-def test_compose_passes_each_workers_container_identity(tmp_path):
-    compose = yaml.safe_load((Path(__file__).resolve().parents[4] / "infra/compose.full.yaml").read_text())
-    worker = compose["services"]["worker"]
-    assert worker.get("network_mode") != "host"
-    # Run the Compose shell command with a fake executable, never the real worker.
-    executable = tmp_path / "rehearsal"
-    executable.write_text('#!/bin/sh\nprintf "%s\\n" "$1" "$REHEARSAL_WORKER_CONTAINER" "$(umask)"\n')
-    executable.chmod(0o755)
-    proc = subprocess.run(
-        [*worker["entrypoint"], worker["command"][0].replace("$$", "$")],
-        env={**os.environ, "PATH": f"{tmp_path}:/usr/bin:/bin", "HOSTNAME": "scaled-worker-id"},
-        capture_output=True, text=True, check=True,
-    )
-    assert proc.stdout.splitlines() == ["worker", "scaled-worker-id", "0002"]
 
 
 def test_a_slow_one_shot_becomes_a_repairable_sandbox_error(monkeypatch):

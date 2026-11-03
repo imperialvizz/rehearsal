@@ -192,7 +192,7 @@ def build_server(client: Rehearsal | None = None) -> Any:
     @mcp.tool()
     def make_agent(world_version_id: str, name: str = "", rounds: int = 3, repeats: int = 1) -> dict[str, Any]:
         """Agent Factory: write a new agent for a published world, rehearse it, harden it with the fix loop, prove it on
-        held-out jobs, and package it as a zip (a runnable agent on Nemotron that calls the application's API, plus a proof
+        held-out jobs, and package it as a zip (a runnable agent on Muse Spark that calls the application's API, plus a proof
         report). Spends money: say the episode count and ask first. Follow it with job_status; the result has artifact_id."""
         res = c.post("/v1/factory", {"world_version_id": world_version_id, "name": name, "rounds": rounds, "repeats": repeats})
         return {**res, "console": link(f"/app/fix/?job={res['job_id']}")}

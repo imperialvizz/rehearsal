@@ -300,7 +300,7 @@ export function ImproveScene() {
 // name, depth in the tree, where its bar starts and how wide it is (percent of the episode), colour
 const SPANS: [string, number, number, number, string][] = [
   ["episode · changed-mind", 0, 0, 100, "bg-primary/60"],
-  ["llm · nemotron-3-super", 1, 3, 34, "bg-primary"],
+  ["llm · muse-spark-1.3", 1, 3, 34, "bg-primary"],
   ["tool · create_refund", 1, 39, 20, "bg-info"],
   ["tool · list_refunds", 1, 61, 16, "bg-info"],
   ["verifier · 3 passed", 1, 82, 16, "bg-success"],

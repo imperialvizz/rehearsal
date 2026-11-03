@@ -3,13 +3,14 @@
 A call is charged at, in order of preference:
 
 1. the cost the provider returned for that request (OpenRouter ``usage.cost``);
-2. the serving provider's own published price list (Nebius, OpenRouter and
-   LiteLLM proxies expose per-token prices on their model endpoints);
+2. the serving provider's own published price list (OpenRouter and LiteLLM
+   proxies expose per-token prices on their model endpoints; the Meta Model API
+   prices below are copied from its pricing page);
 3. a price from ``pricing.yaml`` (or ``REHEARSAL_PRICES``); each entry names its
    source and date;
 4. for vendors called on their own API (OpenAI, Anthropic, Google, Mistral, xAI,
    DeepSeek), the vendor's price as OpenRouter's catalogue lists it; for hosts of
-   open models (Groq, Together, Fireworks, Cerebras), that host's own price from
+   open models (Groq, Together, Fireworks, Baseten, Cerebras), that host's own price from
    OpenRouter's listing of each model's hosts. Neither publishes a
    machine-readable price list of its own.
 
@@ -50,7 +51,7 @@ class Quote:
     model: str
     input_per_m: float
     output_per_m: float
-    source: str  # human-readable origin, e.g. "nebius price list"
+    source: str  # human-readable origin, e.g. "meta price list"
     url: str = ""
     as_of: str = ""
 
@@ -92,18 +93,18 @@ def _today() -> str:
 # --------------------------------------------------------------------------- sources
 
 
-def _nebius_list() -> dict[str, Quote]:
-    key = os.environ.get("NEBIUS_API_KEY")
-    if not key:
-        return {}
-    url = "https://api.tokenfactory.nebius.com/v1/models?verbose=true"
-    data = httpx.get(url, headers={"Authorization": f"Bearer {key}"}, timeout=20).json()
-    out = {}
-    for m in data.get("data", []):
-        p = m.get("pricing") or {}
-        if p.get("prompt") is not None and p.get("completion") is not None:
-            out[m["id"]] = Quote("nebius", m["id"], float(p["prompt"]) * 1e6, float(p["completion"]) * 1e6, "nebius price list", url, _today())
-    return out
+# USD per 1M tokens [input, output], uncached. shortcut: copied by hand because the Meta Model API publishes no
+# machine-readable price list; update this table when the pricing page changes.
+META_PRICES = {
+    "muse-wonder-1.0": (4.00, 20.00),
+    **{f"muse-spark-1.{v}": (1.25, 4.25) for v in (1, 2, 3)},
+    **{f"muse-spark-1.{v}-contributor": (0.10, 0.20) for v in (2, 3)},
+}
+
+
+def _meta_list() -> dict[str, Quote]:
+    url = "https://dev.meta.ai/docs/pricing-rate-limits"
+    return {m: Quote("meta", m, i, o, "meta price list", url, "2026-11-03") for m, (i, o) in META_PRICES.items()}
 
 
 def _openrouter_list() -> dict[str, Quote]:
@@ -152,11 +153,11 @@ def _overrides() -> dict[str, Quote]:
     return out
 
 
-LISTS = {"nebius": _nebius_list, "openrouter": _openrouter_list, "litellm": _litellm_list}
+LISTS = {"meta": _meta_list, "openrouter": _openrouter_list, "litellm": _litellm_list}
 # Vendors called on their own API, and their prefix in OpenRouter model ids (which lists them at the vendor's price).
 VENDORS = {"openai": "openai", "anthropic": "anthropic", "google": "google", "mistral": "mistralai", "xai": "x-ai", "deepseek": "deepseek"}
 # Hosts of open models, and their name in OpenRouter's listing of a model's hosts (which shows each host's price).
-HOSTS = {"groq": "Groq", "together": "Together", "fireworks": "Fireworks", "cerebras": "Cerebras"}
+HOSTS = {"groq": "Groq", "together": "Together", "fireworks": "Fireworks", "baseten": "Baseten", "cerebras": "Cerebras"}
 
 
 def price_source(provider: str) -> str:
@@ -250,9 +251,9 @@ def report(chains: dict[str, str]) -> list[dict[str, Any]]:
     rows = []
     for purpose, chain in chains.items():
         for entry in [e.strip() for e in chain.split(",") if e.strip()]:
-            entry, _, flag = entry.partition("#")  # the reasoning switch (#think, #nothink) is not part of the model's name
+            entry, _, flag = entry.partition("#")  # the reasoning effort (#low, #high, ...) is not part of the model's name
             provider, _, model = entry.partition(":")
             q = billing_quote(provider, model)
-            rows.append({"purpose": purpose, "provider": provider, "model": model, "thinking": {"think": True, "nothink": False}.get(flag),
+            rows.append({"purpose": purpose, "provider": provider, "model": model, "effort": flag or None,
                          "billing": asdict(q) if q else None, "market": market(model)})
     return rows

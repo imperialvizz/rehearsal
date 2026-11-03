@@ -16,9 +16,9 @@ model provider key.
 
 | Part | What it does | How it runs |
 |---|---|---|
-| **API and console** | Takes every request, and serves the console to browsers | One container, on port 7800 |
-| **PostgreSQL** | Holds applications, worlds, runs and results. It is also the queue of work | A managed database, or a container on the same host |
-| **Workers** | Take work from the queue: build worlds, run episodes, improve agents | One or more containers. More workers do more at once |
+| **API and console** | Takes every request, and serves the console to browsers | `rehearsal serve`, on port 7800 |
+| **PostgreSQL** | Holds applications, worlds, runs and results. It is also the queue of work | The container that `rehearsal up` starts, or a managed database |
+| **Workers** | Take work from the queue: build worlds, run episodes, improve agents | `rehearsal worker`, one or more. More workers do more at once |
 | **Sandboxes** | The containers of one world, on a network with no internet access | Started and removed by the workers, with the host's Docker |
 | **Model provider** | The language models that build worlds and play the customer | An outside service. Its key stays on the server |
 
@@ -33,7 +33,7 @@ Two things follow from this design:
 
 <LinkCards>
   <LinkCard href="/self-hosting/requirements" title="Requirements">The machine, the database and the model key you need.</LinkCard>
-  <LinkCard href="/self-hosting/install-with-docker-compose" title="Install with Docker Compose">From a clone of the repository to a signed-in console.</LinkCard>
+  <LinkCard href="/self-hosting/install-from-source" title="Install from source">From a clone of the repository to a signed-in console.</LinkCard>
   <LinkCard href="/self-hosting/troubleshooting" title="Troubleshooting">Each message you can meet, why, and the fix.</LinkCard>
 </LinkCards>
 

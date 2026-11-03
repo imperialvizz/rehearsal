@@ -15,6 +15,8 @@ Generated (never edit by hand):
     agent-plugin/.cursor-plugin/plugin.json         Cursor manifest
     agent-plugin/providers/antigravity/             Antigravity CLI (agy) bundle: its closed plugin.json schema cannot
                                                     sit next to the Agent Plugins manifest, so it gets its own folder
+    agent-plugin/providers/muse-code/               Meta Muse Code bundle: the skill for `muse skills install` and the
+                                                    `mcp_servers` block to merge into ~/.config/muse/settings.json
     .claude-plugin/marketplace.json                 marketplace for `claude plugin marketplace add MitudruDutta/rehearsal`
     .agents/plugins/marketplace.json                marketplace for `codex plugin marketplace add MitudruDutta/rehearsal`
 
@@ -70,6 +72,9 @@ def outputs() -> dict[Path, str]:
             "$schema": "https://antigravity.google/schemas/v1/plugin.json", "name": plugin["name"], "description": plugin["description"],
         }),
         PLUGIN / "providers" / "antigravity" / "mcp_config.json": _json({"mcpServers": servers}),
+        # Muse Code aborts a run when a "required" server fails to start; "optional" only warns when uvx is missing
+        PLUGIN / "providers" / "muse-code" / "settings.json": _json({"schema_version": 1, "mcp_servers": {
+            name: {"transport": "stdio", "command": s["command"], "args": s["args"], "mode": "optional"} for name, s in servers.items()}}),
         ROOT / ".claude-plugin" / "marketplace.json": _json({
             "name": "rehearsal",
             "owner": plugin["author"],
@@ -86,7 +91,7 @@ def outputs() -> dict[Path, str]:
         }),
     }
     for src in sorted(SKILL.rglob("*.md")):
-        for skills in (PLUGIN / "skills", PLUGIN / "providers" / "antigravity" / "skills"):
+        for skills in (PLUGIN / "skills", PLUGIN / "providers" / "antigravity" / "skills", PLUGIN / "providers" / "muse-code" / "skills"):
             files[skills / "rehearsal" / src.relative_to(SKILL)] = src.read_text()
     return files
 

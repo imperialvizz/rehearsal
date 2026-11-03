@@ -178,7 +178,7 @@ export function buildServer(client?: Rehearsal): McpServer {
        { agent_id: z.string(), run_id: z.string() }, async ({ agent_id, run_id }) => get().post("/v1/improvements", { profile_id: agent_id, run_id }));
 
   tool("make_agent", "Agent Factory: write a new agent for a published world, rehearse it, harden it with the fix loop, prove it on " +
-       "held-out jobs, and package it as a zip (a runnable agent on Nemotron that calls the application's API, plus a proof " +
+       "held-out jobs, and package it as a zip (a runnable agent on Muse Spark that calls the application's API, plus a proof " +
        "report). Spends money: say the episode count and ask first. Follow it with job_status; the result has artifact_id.",
        { world_version_id: z.string(), name: z.string().default(""), rounds: z.number().int().default(3), repeats: z.number().int().default(1) },
        async ({ world_version_id, name, rounds, repeats }) => {

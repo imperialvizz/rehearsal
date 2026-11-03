@@ -166,7 +166,7 @@ def test_build_accepts_dockerfile_confined_to_context(tmp_path, docker_run, link
 
 
 @pytest.mark.parametrize("name", [
-    "NEBIUS_API_KEY", "REHEARSAL_SESSION_SECRET", "KAGGLE_API_TOKEN", "DATABASE_PASSWORD",
+    "MODEL_API_KEY", "REHEARSAL_SESSION_SECRET", "KAGGLE_API_TOKEN", "DATABASE_PASSWORD",
 ])
 def test_redacts_exact_configured_secret_in_free_text(monkeypatch, name):
     value = "synthetic.credential+with/punctuation=987654"
@@ -184,19 +184,19 @@ def test_redacts_overlapping_configured_secrets_longest_first(monkeypatch):
     "v1." + "A" * 32 + "." + "B" * 32,
     "v1." + "aB_9-" * 8 + "." + "cD_0-" * 8,
 ])
-def test_redacts_bare_nebius_shaped_token(token):
+def test_redacts_bare_dotted_provider_token(token):
     assert redact(f"upstream failure ({token})") == "upstream failure ([REDACTED])"
 
 
 def test_nested_values_redact_configured_and_sensitive_credentials(monkeypatch):
     value = "synthetic-nested-provider-credential"
-    monkeypatch.setenv("NEBIUS_API_KEY", value)
+    monkeypatch.setenv("MODEL_API_KEY", value)
     assert redact_any({"attributes": {
-        "nebius_api_key": "unconfigured-sensitive-value",
+        "model_api_key": "unconfigured-sensitive-value",
         "session_secret": "another-unconfigured-sensitive-value",
         "messages": [f"upstream returned {value}", (value, "public message")],
     }}) == {"attributes": {
-        "nebius_api_key": "[REDACTED]",
+        "model_api_key": "[REDACTED]",
         "session_secret": "[REDACTED]",
         "messages": ["upstream returned [REDACTED]", ("[REDACTED]", "public message")],
     }}
@@ -246,7 +246,7 @@ def priced_reply(offline_pricing, monkeypatch):
     return reply
 
 
-@pytest.mark.parametrize("provider", ["nebius", "openrouter"])
+@pytest.mark.parametrize("provider", ["meta", "openrouter"])
 def test_serving_provider_price_precedes_configured_override(offline_pricing, monkeypatch, provider):
     published = pricing.Quote(provider, "fixture-model", 2, 6, "provider price list")
     listing = Mock(return_value={"fixture-model": published})
@@ -304,7 +304,7 @@ def test_offline_price_source_falls_back_to_configured_price(offline_pricing, pr
 
 
 def test_offline_unknown_price_keeps_tokens_without_market_billing(offline_pricing, priced_reply, monkeypatch):
-    monkeypatch.setenv("REHEARSAL_PRICES", '{"nebius:fixture-model": [2, 6]}')
+    monkeypatch.setenv("REHEARSAL_PRICES", '{"together:fixture-model": [2, 6]}')
     market = Mock(return_value={"input_per_m": {"min": 2}, "output_per_m": {"min": 6}})
     monkeypatch.setattr(pricing, "market", market)
     reply = priced_reply()
