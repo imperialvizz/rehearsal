@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://rehearsalkit.xyz">
+<a href="SETUP.md">
   <img src="web/public/brand/rehearsal-icon.svg" alt="Rehearsal logo" width="88" height="88">
 </a>
 
@@ -14,10 +14,10 @@ Rehearsal is CI for AI agents. It runs your agent on a working copy of your real
 [![Python](https://img.shields.io/pypi/pyversions/rehearsal-kit?color=2b59d9)](https://pypi.org/project/rehearsal-kit/)
 [![npm](https://img.shields.io/npm/v/rehearsal-kit?label=npm&color=2b59d9)](https://www.npmjs.com/package/rehearsal-kit)
 [![Tests](https://github.com/MitudruDutta/rehearsal/actions/workflows/tests.yml/badge.svg)](https://github.com/MitudruDutta/rehearsal/actions/workflows/tests.yml)
-[![Docs](https://img.shields.io/badge/docs-docs.rehearsalkit.xyz-2b59d9)](https://docs.rehearsalkit.xyz)
+[![Docs](https://img.shields.io/badge/docs-localhost%3A7801-2b59d9)](docs/README.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2b59d9)](LICENSE)
 
-[Website](https://rehearsalkit.xyz) · [Documentation](https://docs.rehearsalkit.xyz) · [Quickstart](#quickstart) · [Built on Muse](#built-on-metas-muse-models) · [Self-hosting](#self-hosting) · [Planning docs](#planning-docs) · [Report a bug](https://github.com/MitudruDutta/rehearsal/issues)
+[Run it locally](SETUP.md) · [Documentation](docs/README.md) · [Quickstart](#quickstart) · [Built on Muse](#built-on-metas-muse-models) · [Self-hosting](#self-hosting) · [Planning docs](#planning-docs) · [Report a bug](https://github.com/MitudruDutta/rehearsal/issues)
 
 <img src=".github/assets/rehearsal-hero.webp" alt="The Rehearsal landing page, replaying a real World Compiler build of Gitea" width="900">
 
@@ -46,7 +46,7 @@ Rehearsal tests the agent where it will actually work: on your application, thro
 - **Ready-made worlds.** A world library lets any workspace rehearse agents on worlds that are already built, without building anything.
 - **Builds that do not burn money.** Tools are checked one at a time, a stuck step pauses itself, the build page shows what each step cost and why it is stuck, and a deploy that restarts workers never costs a build an attempt.
 - **Every step on the record.** Each build, rehearsal and improvement keeps its full timeline in Rehearsal: model calls, tool calls, checks, and what each one cost, broken down by role and model.
-- **Meta's Muse models by default, any provider if you want.** Every role runs on Muse Spark or Muse Wonder through the Meta Model API, routed by role with its own reasoning effort, and falls back to the open weights of Muse Spark Open on Fireworks and Baseten. OpenAI, Anthropic, Google, Mistral, xAI, DeepSeek, Groq, Together, Cerebras, OpenRouter, a LiteLLM proxy, Modal, or any OpenAI-compatible endpoint also work, with fallback chains and spend caps.
+- **Built for Meta's Muse models.** Every role runs on Muse Spark or Muse Wonder through the Meta Model API, with one key. Each role has its own reasoning effort, the agent under test stays on one model for a whole run, and the simulated customer runs on Muse Spark's Contributor tier, about 12 times cheaper. Spend caps hold from the first call.
 
 ## How it works
 
@@ -79,14 +79,16 @@ Every model call in Rehearsal goes to one of Meta's Muse models, through an Open
 |---|---|---|
 | World Compiler (most roles) | Reads the source, runs the app in a sandbox, seeds data, writes tools and checks | Muse Spark 1.3 at `medium` |
 | Hard compiler roles | Designs jobs, investigates failed validations, repairs builds, audits jobs live | Muse Wonder 1.0 at `high`, then Muse Spark 1.3 at `xhigh` |
-| Agent under test | Does the job through the application's tools | Muse Spark 1.3 at `medium` |
-| Simulated customer | Talks to the agent, changes its mind mid-task | Muse Spark 1.3 at `minimal` |
+| Agent under test | Does the job through the application's tools | Muse Spark 1.3 at `medium`, and only that model, so a run never mixes models |
+| Simulated customer | Talks to the agent, changes its mind mid-task | Muse Spark 1.3 Contributor at `minimal`, then Muse Spark 1.3 Standard |
 | Improvement step (fix loop) | Writes the next agent version from failures | the hard-role chain |
 | Packaged agent (Agent Factory) | The `agent.py` that Rehearsal hands you | Muse Spark 1.3 at `medium` |
 
-When the Meta Model API fails or has no key, every chain falls back to the open weights of Muse Spark Open on Fireworks, then on Baseten.
+Every chain needs only `MODEL_API_KEY`. Inside a chain, the next Muse model takes over when one fails: Muse Spark at `xhigh` stands in for Muse Wonder, and Standard for Contributor when Contributor's 150 requests a minute run out.
 
 - **Routed by role.** A chain is `provider:model[#effort]`, so `meta:muse-spark-1.3#minimal` is Muse Spark with the shortest reasoning pass. The next model in a chain takes over when one fails.
+- **Cheaper where the data is fictional.** Muse Spark's Contributor tier costs $0.10 / $0.20 per 1M tokens, against $1.25 / $4.25 for Standard, and Meta may train on its prompts. Only the simulated customer uses it: it sees nothing but the world's fictional data. Set `REHEARSAL_MODEL_PARTICIPANT=meta:muse-spark-1.3#minimal` to keep it on Standard.
+- **One model per run.** The agent under test has no fallback, so every episode of a run uses the same Muse model and runs stay comparable.
 - **Reasoning only where it pays.** The simulated customer answers in one or two sentences on every turn, so it reasons at `minimal`. Muse Wonder is kept for the roles where a wrong answer costs a whole build.
 - **Measured per role.** Every call records its role, model, effort, tokens, time and cost. The console shows a "Models by role" table for each build, run and fix loop, and `rehearsal prices` shows the price used for each configured model. Meta Model API prices are built in, so a spend cap holds from the first call.
 
@@ -95,19 +97,20 @@ When the Meta Model API fails or has no key, every chain falls back to the open 
 | Meta product | Where Rehearsal uses it |
 |---|---|
 | Meta Model API (`https://api.meta.ai/v1`, `MODEL_API_KEY`) | The default provider for every role |
-| Muse Spark 1.3 | Tool work, the agent under test, the simulated customer, and the packaged agent |
+| Muse Spark 1.3 | Tool work, the agent under test, the simulated customer (Contributor tier), and the packaged agent |
 | Muse Wonder 1.0 | The hardest World Compiler roles and the fix loop |
-| Muse Spark Open (open weights) | The fallback on Fireworks and Baseten, or on your own Modal endpoint through `MODAL_BASE_URL` |
 | Muse Glimmer (open weights) | Can serve any role or the packaged agent on your own machine, through the `local` provider (vLLM or llama.cpp) |
-| Muse Code | A bundle with the Rehearsal skill and MCP server, so Muse Code can build worlds and run rehearsals for you |
+| Muse Code | The Rehearsal plugin (`bash scripts/install-muse-code.sh`): Muse Code builds worlds and runs rehearsals for you |
 
 ### Use Rehearsal from Muse Code
 
+Muse Code is Meta's coding agent. The Rehearsal plugin gives it the Rehearsal skill and MCP server, so it can build worlds, run evaluations, explain failed episodes and improve your agent. After `scripts/setup.sh`:
+
 ```bash
-muse skills install agent-plugin/providers/muse-code/skills/rehearsal --scope user
+bash scripts/install-muse-code.sh
 ```
 
-Then copy the `mcp_servers` block from [agent-plugin/providers/muse-code/settings.json](agent-plugin/providers/muse-code/settings.json) into `~/.config/muse/settings.json` and start a new session. Ask Muse Code to build a world, run an evaluation, or explain a failed episode.
+The script installs the skill with `muse skills install` and adds this clone's `rehearsal mcp` to `~/.config/muse/settings.json`. Start a new session and ask Muse Code to show your Rehearsal workspace status. The steps by hand are on the docs site, under **AI assistants**, then **Muse Code**.
 
 ### How Rehearsal uses Tavily
 
@@ -124,7 +127,8 @@ Then copy the `mcp_servers` block from [agent-plugin/providers/muse-code/setting
 
 ### What changed for the Meta hackathon
 
-- **Every role moved to Meta's Muse models.** Muse Spark and Muse Wonder on the Meta Model API by default, with Muse Spark Open on Fireworks and Baseten as fallbacks.
+- **Every role moved to Meta's Muse models.** Muse Spark and Muse Wonder on the Meta Model API, with `MODEL_API_KEY` as the only model key. The simulated customer runs on Muse Spark's Contributor tier, and the agent under test on one model per run.
+- **A Rehearsal plugin for Muse Code**, installed with `bash scripts/install-muse-code.sh`.
 - **Reasoning effort per role.** A chain entry now ends in `#minimal`, `#low`, `#medium`, `#high`, `#xhigh` or `#max`, sent as `reasoning_effort`, in place of a vendor-specific thinking switch.
 - **Prices for the Meta Model API** built in, so `rehearsal prices`, spend caps and the "Models by role" table work without a pricing file.
 - **The Agent Factory packages agents that run on Muse Spark.**
@@ -147,7 +151,7 @@ rehearsal login                    # opens the console in your browser; approve 
 Without installing, `npx rehearsal-kit <command>` runs the same CLI. The server, workers and World Compiler are
 Python only; see [Self-hosting](#self-hosting).
 
-Build a world and evaluate an agent on the hosted service at [rehearsalkit.xyz](https://rehearsalkit.xyz):
+Build a world and evaluate an agent on your server at http://localhost:7800 ([SETUP.md](SETUP.md) starts one):
 
 ```bash
 rehearsal apps import-catalog                            # pinned open-source apps: Gitea, Chatwoot, Vikunja, WordPress, ...
@@ -162,7 +166,7 @@ rehearsal autofix PROFILE_ID RUN_ID --rounds 3 --watch   # fix it in rounds, pro
 rehearsal gate WV_ID --prompt-file agent.md --name support-agent --baseline-file main-agent.md   # the CI check
 ```
 
-In GitHub Actions, the same check is one step: `uses: MitudruDutta/rehearsal@main`. See [Use Rehearsal in CI](https://docs.rehearsalkit.xyz/guides/use-rehearsal-in-ci).
+In GitHub Actions, the same check is one step: `uses: MitudruDutta/rehearsal@main`. See [Use Rehearsal in CI](docs/content/guides/use-rehearsal-in-ci.mdx).
 
 Add your own application by pinning its source commit and images:
 
@@ -246,6 +250,9 @@ The server, workers and sandboxes run on Linux with Docker. The CLI and SDK run 
 
 ### From source
 
+Step by step, with one setup script and one script that builds a world and evaluates an agent: [SETUP.md](SETUP.md).
+By hand:
+
 ```bash
 python -m venv .venv && source .venv/bin/activate
 python -m pip install -e './rehearsal/py[server,dev]'
@@ -263,7 +270,7 @@ rehearsal worker                                         # builds and evaluation
 
 Generate the session secret with `python -c "import secrets; print(secrets.token_hex(32))"`. Keep keys in `.env`, which git ignores.
 
-The [self-hosting guide](https://docs.rehearsalkit.xyz/self-hosting) covers requirements, installing from source, Windows and troubleshooting.
+The [self-hosting guide](docs/content/self-hosting/index.mdx) covers requirements, installing from source, Windows and troubleshooting.
 
 ## Configuration
 
@@ -275,14 +282,12 @@ Settings come from the environment, or from `.env` in the working directory. The
 | `REHEARSAL_SESSION_SECRET` | development value | Signs console session cookies; set your own |
 | `REHEARSAL_MODEL_COMPILER`, `_REASONER`, `_AGENT`, `_PARTICIPANT`, `_IMPROVER` | Meta's Muse models, routed by role | Model chains, `provider:model[#effort][,...]` |
 | `MODEL_API_KEY` | none | Meta Model API, for the default Muse Spark and Muse Wonder models |
-| `FIREWORKS_API_KEY`, `BASETEN_API_KEY` | none | Fallback hosts for the open weights of Muse Spark Open |
 | `TAVILY_API_KEY` | none | Web research during builds; without it the research phase is skipped |
-| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, ... | none | One key for each other provider the chains name |
 | `REHEARSAL_SIGNUP` | `open` | `closed` stops new workspaces from the sign-in page |
 | `REHEARSAL_MONTHLY_ALLOWANCE_USD` | `0` (no limit) | Model spend a workspace may use per month |
-| `REHEARSAL_URL`, `REHEARSAL_API_KEY` | `https://rehearsalkit.xyz`, none | Where the CLI and SDK connect |
+| `REHEARSAL_URL`, `REHEARSAL_API_KEY` | `http://localhost:7800`, none | Where the CLI and SDK connect |
 
-Every setting, with its default, is in the [configuration reference](https://docs.rehearsalkit.xyz/reference/configuration). `rehearsal prices` shows the price the server uses for each configured model.
+Every setting, with its default, is in the [configuration reference](docs/content/reference/configuration.mdx). `rehearsal prices` shows the price the server uses for each configured model.
 
 ## Development
 
@@ -298,7 +303,7 @@ cd web && pnpm dev
 cd web && pnpm typecheck
 ```
 
-`pnpm build` writes the console's static export to `web/out` and copies it to `rehearsal/py/rehearsal/api/static`, where the API serves it. The documentation site lives in [docs/](docs/).
+`pnpm build` writes the console's static export to `web/out`, where the API serves it from a clone. `pnpm package` also copies it into `rehearsal/py/rehearsal/api/static` for a released package. The documentation site lives in [docs/](docs/).
 
 The repository holds two packages, released together under one version:
 
@@ -325,7 +330,7 @@ Rehearsal is in early release (0.1.x). World builds, evaluations, the fix loop, 
 
 ## Built with
 
-- Meta's [Muse models](https://dev.meta.ai) (Muse Spark, Muse Wonder and the open-weight Muse Spark Open) run every role in Rehearsal, through the Meta Model API, Fireworks and Baseten.
+- Meta's [Muse models](https://dev.meta.ai) (Muse Spark and Muse Wonder) run every role in Rehearsal, through the Meta Model API, and Muse Code drives it through the Rehearsal plugin.
 - [Tavily](https://tavily.com) grounds every world in how real people use the application and helps builds past setup errors.
 - FastAPI, SQLAlchemy and PostgreSQL for the control plane; Docker for sandboxes; Next.js for the console and documentation.
 

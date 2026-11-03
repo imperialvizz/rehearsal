@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Project** | Rehearsal |
-| **Models** | Meta's Muse models: Muse Spark and Muse Wonder on the Meta Model API, Muse Spark Open on Fireworks and Baseten |
+| **Models** | Meta's Muse models: Muse Spark and Muse Wonder on the Meta Model API |
 | **Document** | Scope (step 1 of 3: scope → [PRD](prd.md) → [spec](spec.md)) |
 | **Status** | Agreed 2026-10-09; revised 2026-10-27 (decisions D8 to D10, scope items 8 and 9, criteria S7 and S8) |
 
@@ -41,7 +41,7 @@ The scope was set in a flipped-interaction session: the coding agent asked, the 
 | D3 | How do we know the compiler generalises? | One application (Easy!Appointments) is **held out** and never inspected during development. |
 | D4 | Who decides pass or fail? | **Read-only checks on the application's database** and a journal of outside effects. No language model grades outcomes. |
 | D5 | Is model training in scope? | **No, paused.** Compile, evaluate, improve the prompt and compare first; training is future work. |
-| D6 | Which models run it? | Meta's **Muse** models, on the **Meta Model API**, with the open weights of Muse Spark Open on Fireworks and Baseten as fallbacks. |
+| D6 | Which models run it? | Meta's **Muse** models, on the **Meta Model API**. |
 | D7 | What does it run on? | A hosted service on free cloud credits, plus a package anyone can install and self-host. |
 | D8 | What is the product, in one line? | **CI for AI agents**: rehearse on a copy of the real application, fix what fails, and check every change before it merges. |
 | D9 | When does an automatic fix count? | Only when it verifies more episodes on train and dev **without** a new rule violation or false "done", and the best version is then proved on held-out jobs no round has seen. A tie is not a fix. |

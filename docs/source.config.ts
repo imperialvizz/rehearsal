@@ -14,8 +14,8 @@ const pageSchema = frontmatterSchema.extend({
   time: z.string().optional(),
   cost: z.string().optional(),
   needs: z.string().optional(),
-  /** a label beside the title: "coming-soon", "self-hosted", "hosted" */
-  label: z.enum(["coming-soon", "self-hosted", "hosted"]).optional(),
+  /** a label beside the title: "meta-muse", "self-hosted", "hosted" */
+  label: z.enum(["meta-muse", "self-hosted", "hosted"]).optional(),
 });
 
 export const docs = defineDocs({

@@ -29,7 +29,7 @@ const TIERS = [
 ];
 
 const FAQ = [
-  ["Can I train a model on my practice worlds?", "Coming soon. Every episode already ends with a score verified in your application's database, which is the reward reinforcement learning needs. Today you can export verified episodes as a dataset and improve an agent's instructions from its failures."],
+  ["Can I fine-tune Meta Muse on my practice worlds?", "Not built yet. Every episode already ends with a score verified in your application's database, which is the reward reinforcement learning needs. Today you can export verified episodes as a dataset and improve an agent's instructions from its failures."],
   ["Does Rehearsal touch my production data?", "No. It runs your application's published images in a network with no internet access, with fictional data it creates itself. Checks read the sandbox database read-only."],
   ["Do I need to write code?", "No. Sign in, add your application, build its world, and rehearse an agent from the dashboard. The CLI and the Python and TypeScript SDKs do the same things for CI pipelines and scripts."],
   ["Which applications work?", "Web applications that run in containers and expose an HTTP or GraphQL API, backed by SQLite, PostgreSQL, or MySQL. One catalog application is kept out of development entirely, to test applications the compiler has never seen."],
@@ -118,9 +118,9 @@ export default function Landing() {
             <BentoCard Icon={Activity} name="Every step on the record" description="Each build and rehearsal keeps its full timeline: model calls by role, tool calls, checks, and what each one cost." visual={<TraceScene />} />
           </BentoGrid>
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-dashed bg-card/40 px-5 py-4">
-            <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Coming soon</span>
-            <span className="font-medium">Train your own model on your practice worlds.</span>
-            <span className="text-sm text-muted-foreground">Every episode already ends with a score verified in your database: the reward reinforcement learning needs.</span>
+            <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Meta Muse</span>
+            <span className="font-medium">Fine-tune Meta Muse on your practice worlds.</span>
+            <span className="text-sm text-muted-foreground">Not built yet. Every episode already ends with a score verified in your database: the reward reinforcement learning needs.</span>
           </div>
         </div>
       </section>

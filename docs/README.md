@@ -11,7 +11,7 @@ Use Node.js 22 or later and pnpm. On Windows, run these from Git Bash or PowerSh
 ```bash
 cd docs
 pnpm install
-pnpm dev          # http://localhost:3000, reloads when a page changes
+pnpm dev          # http://localhost:7801, reloads when a page changes
 ```
 
 `pnpm dev` also starts the service that answers "Ask AI" (see [Ask AI](#ask-ai)), on port 4311.
@@ -98,8 +98,8 @@ Set these when you build for publishing. They are read at build time.
 
 | Variable | For | Default |
 |---|---|---|
-| `NEXT_PUBLIC_DOCS_SITE_URL` | The address the site is published at. Used in `llms.txt` and in link previews | `https://docs.rehearsalkit.xyz` |
-| `NEXT_PUBLIC_CONSOLE_URL` | The server: "Open console" goes to its `/app/`, and the setup prompt signs in to it. For a local server, set `http://localhost:7800` in `docs/.env.local` | `https://rehearsalkit.xyz` |
+| `NEXT_PUBLIC_DOCS_SITE_URL` | The address the site is served at. Used in `llms.txt` and in link previews | `http://localhost:7801` |
+| `NEXT_PUBLIC_CONSOLE_URL` | The server: "Open console" goes to its `/app/`, and the setup prompt signs in to it. For another server, set its address in `docs/.env.local` | `http://localhost:7800` |
 | `NEXT_PUBLIC_ASSISTANT_URL` | The address of the Ask AI service. `pnpm dev` sets it for you | Empty: no answers in the page |
 
 The landing page's "Docs" link is set in the console's build, not here: build `web/` with `NEXT_PUBLIC_DOCS_URL`

@@ -192,7 +192,7 @@ NOTES: dict[str, str] = {
 }
 
 SERVER_ONLY = {"serve", "worker", "up", "migrate", "bootstrap", "users", "openapi", "prices"}
-COMING_SOON = {"train", "run-bundle"}
+META_MUSE = {"train"}
 SPENDS = {"build", "eval", "improve", "autofix", "factory", "gate"}
 
 
@@ -333,8 +333,8 @@ def cli_page() -> tuple[str, int]:
             cmd = commands[name]
             out += [f"### rehearsal {name}", ""]
             labels = []
-            if name in COMING_SOON:
-                labels.append('<Label kind="coming-soon" />')
+            if name in META_MUSE:
+                labels.append('<Label kind="meta-muse" />')
             if name in SERVER_ONLY:
                 labels.append('<Label kind="self-hosted" />')
             lead = esc(summary[:1].upper() + summary[1:]) + "."
@@ -794,9 +794,9 @@ MESSAGES: list[tuple[int, str, str, str, str]] = [
 
 # Messages the CLI prints by itself, with no status from the server.
 CLI_MESSAGES: list[tuple[str, str, str]] = [
-    ("Cannot reach Rehearsal at https://rehearsalkit.xyz (ConnectError). Check the URL (`rehearsal login --url ...`) and that the server is running.", "Cannot reach Rehearsal at", "The address is wrong, or the server is not running. `rehearsal whoami` shows the address in use."),
+    ("Cannot reach Rehearsal at http://localhost:7800 (ConnectError). Check the URL (`rehearsal login --url ...`) and that the server is running.", "Cannot reach Rehearsal at", "The address is wrong, or the server is not running. `rehearsal whoami` shows the address in use."),
     ("Rehearsal did not answer in time. Try again; long work runs as jobs, so check 'rehearsal jobs show JOB_ID'.", "Rehearsal did not answer in time.", "Try again. Work that takes long continues on the server."),
-    ("Not signed in. Run `rehearsal login`: it signs in to Rehearsal at https://rehearsalkit.xyz through your browser (add `--url <address>` for a server of your own). In CI, set REHEARSAL_API_KEY.", "Not signed in. Run `rehearsal login`", "Run `rehearsal login`."),
+    ("Not signed in. Run `rehearsal login`: it signs in to Rehearsal at http://localhost:7800 through your browser (add `--url <address>` for a server of your own). In CI, set REHEARSAL_API_KEY.", "Not signed in. Run `rehearsal login`", "Run `rehearsal login`."),
     ("This command runs a Rehearsal server, which needs the server extra", "which needs the server extra", "Run `pip install 'rehearsal-kit[server]'`. Only the commands that run a server need it."),
     ("The MCP server needs the mcp extra", "The MCP server needs the mcp extra", "Run `pip install 'rehearsal-kit[mcp]'`, or start it with `uvx --from \"rehearsal-kit[mcp]\" rehearsal mcp`."),
     ("rehearsal: unknown command 'evaal'. Did you mean 'eval'? Run 'rehearsal --help' to see every command.", "unknown command", "Use the suggested command."),
@@ -964,7 +964,7 @@ API_ABOUT: dict[str, str] = {
     "POST /v1/improvements": "Proposes the next version of an agent from its failed train and dev episodes in a run. It spends a little model budget.",
     "POST /v1/dataset-exports": "Exports episodes of runs as a dataset. Only train and dev episodes can be exported.",
     "GET /v1/training-jobs": "Training jobs. None can exist yet.",
-    "POST /v1/training-jobs": "Answers that training is coming soon.",
+    "POST /v1/training-jobs": "Answers that fine-tuning a Meta Muse model is not built yet.",
     "GET /v1/training-jobs/{tj_id}": "One training job. None can exist yet.",
     "POST /v1/world-versions/{wv_id}/bundle": "Exports a world version as a bundle file.",
     "GET /v1/artifacts": "Exported files: datasets and bundles. `kind` narrows the list.",
@@ -1651,7 +1651,7 @@ def ts_sdk_page() -> str:
 # Every setting the package reads from the environment: (section, name, default shown, meaning). The script stops when the
 # code reads a variable that is not listed here.
 CONFIG: list[tuple[str, str, str, str]] = [
-    ("Client", "REHEARSAL_URL", "`https://rehearsalkit.xyz`", "The server that the CLI, the Python client and the MCP server talk to. It takes precedence over a saved sign-in."),
+    ("Client", "REHEARSAL_URL", "`http://localhost:7800`", "The server that the CLI, the Python client and the MCP server talk to. It takes precedence over a saved sign-in."),
     ("Client", "REHEARSAL_API_KEY", "", "The key they use. It takes precedence over a saved sign-in."),
     ("Client", "REHEARSAL_CONFIG", "`~/.config/rehearsal/config.json`", "Where `rehearsal login` saves the sign-in."),
     ("Client", "REHEARSAL_DEBUG", "", "Set it to anything to make the CLI log each HTTP request."),
@@ -1668,11 +1668,12 @@ CONFIG: list[tuple[str, str, str, str]] = [
     ("Sign-in", "REHEARSAL_ADMIN_EMAILS", "", "Operator admins, separated by commas. They see every workspace and can set any plan. Only a sign-in with Google counts."),
     ("Sign-in", "REHEARSAL_PUBLIC_URL", "`http://localhost:7800`", "Where browsers reach the server. Payment pages return here."),
     ("Sign-in", "REHEARSAL_DOCS_URL", "", "The documentation site. `/docs` on the server redirects there; without it, `/docs` opens the API reference at `/api/docs`."),
-    ("Models", "REHEARSAL_MODEL_COMPILER", "Muse Spark 1.3 on the Meta Model API, then Muse Spark Open on Fireworks and Baseten, reasoning effort medium", "The model chain for the World Compiler's tool-heavy roles: inspecting the source, building the runtime, seeding data, writing tools."),
-    ("Models", "REHEARSAL_MODEL_REASONER", "Muse Wonder 1.0 (effort high), then Muse Spark 1.3 (effort xhigh) on the Meta Model API, then Muse Spark Open on Fireworks and Baseten", "The model chain for the World Compiler's hardest roles: designing jobs, judging failed validations, and repairing a runtime that will not start."),
-    ("Models", "REHEARSAL_MODEL_AGENT", "Muse Spark 1.3 on the Meta Model API, then Muse Spark Open on Fireworks and Baseten, reasoning effort medium", "The model chain for agents that have no model of their own."),
-    ("Models", "REHEARSAL_MODEL_PARTICIPANT", "Muse Spark 1.3 on the Meta Model API, then Muse Spark Open on Fireworks and Baseten, lowest reasoning effort", "The model chain that plays the simulated customer."),
+    ("Models", "REHEARSAL_MODEL_COMPILER", "Muse Spark 1.3 on the Meta Model API, reasoning effort medium", "The model chain for the World Compiler's tool-heavy roles: inspecting the source, building the runtime, seeding data, writing tools."),
+    ("Models", "REHEARSAL_MODEL_REASONER", "Muse Wonder 1.0 (effort high), then Muse Spark 1.3 (effort xhigh), on the Meta Model API", "The model chain for the World Compiler's hardest roles: designing jobs, judging failed validations, and repairing a runtime that will not start."),
+    ("Models", "REHEARSAL_MODEL_AGENT", "Muse Spark 1.3 on the Meta Model API, reasoning effort medium, and only that model", "The model chain for agents that have no model of their own. One model, so a run never mixes models."),
+    ("Models", "REHEARSAL_MODEL_PARTICIPANT", "Muse Spark 1.3 Contributor, then Standard, on the Meta Model API, lowest reasoning effort", "The model chain that plays the simulated customer. It sees only fictional world data, so it uses the Contributor tier: about 12 times cheaper, and Meta may train on those prompts."),
     ("Models", "REHEARSAL_MODEL_IMPROVER", "the reasoner's chain", "The model chain that proposes a better agent."),
+    ("Models", "REHEARSAL_PROVIDERS", "this project: `meta`, the Meta Model API", "Providers added without changing the library: JSON of a name to `base_url`, `api_key_env` (the setting that holds the key) and an optional `tool_choice` sent on every call with tools. This project declares `meta` (`https://api.meta.ai/v1`, key `MODEL_API_KEY`, `tool_choice` `auto`)."),
     ("Models", "REHEARSAL_PRICES", "`{}`", "Prices for models whose provider reports none: JSON of `provider:model` to `[input, output]` in US dollars for a million tokens."),
     ("Models", "REHEARSAL_PRICING_FILE", "`pricing.yaml`", "A file of the same prices, each with its source and date."),
     ("Web research", "TAVILY_API_KEY", "", "A Tavily key. With it, each world build first researches how real people use the application (its documentation, forums and issue trackers) and bases at least half its jobs on what it finds, citing the pages. Without it, that step is skipped. See [Build a practice world](/guides/build-a-practice-world)."),
@@ -1752,7 +1753,7 @@ def config_page() -> str:
                 "`#low`, `#medium`, `#high`, `#xhigh` or `#max` to set `reasoning_effort` for that entry only; Meta's Muse models read it.",
                 "",
                 "```dotenv",
-                "REHEARSAL_MODEL_PARTICIPANT=meta:muse-spark-1.3#minimal,fireworks:accounts/fireworks/models/muse-spark-open#low",
+                "REHEARSAL_MODEL_PARTICIPANT=meta:muse-spark-1.3#minimal",
                 "```",
                 "",
                 "### Providers",
@@ -1763,7 +1764,11 @@ def config_page() -> str:
                 "| Provider | Key | Address | Prices |",
                 "|---|---|---|---|",
             ]
-            for name, (base, key) in PROVIDERS.items():
+            from rehearsal.agents.llm import providers
+            example = (ROOT / ".env.example").read_text(encoding="utf-8").splitlines()
+            declared = next((line.partition("=")[2] for line in example if line.startswith("REHEARSAL_PROVIDERS=")), "")
+            os.environ["REHEARSAL_PROVIDERS"] = declared  # the page shows the providers this project declares, not a local .env
+            for name, (base, key) in providers().items():
                 if name == "modal":
                     address, key_shown = "`MODAL_BASE_URL`", "`MODAL_PROXY_TOKEN_ID` and `MODAL_PROXY_TOKEN_SECRET`"
                 elif name in ("local", "custom"):

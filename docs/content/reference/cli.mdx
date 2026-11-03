@@ -60,6 +60,7 @@ server's message and a hint: see [Errors](/reference/errors).
 | [`rehearsal artifacts`](#rehearsal-artifacts) | List and download exported files |
 | [`rehearsal export-example`](#rehearsal-export-example) | Write examples/\<app>/ from a published world version and its runs |
 | [`rehearsal export-replay`](#rehearsal-export-replay) | Save a job's or run's recorded events (already redacted) as a replay file |
+| [`rehearsal run-bundle`](#rehearsal-run-bundle) | Start a world from an exported bundle on your own machine (not built yet) |
 
 **AI assistants**
 
@@ -81,12 +82,11 @@ server's message and a hint: see [Errors](/reference/errors).
 | [`rehearsal openapi`](#rehearsal-openapi) | Print the OpenAPI document |
 | [`rehearsal prices`](#rehearsal-prices) | Model prices from every source, for the configured model chains |
 
-**Coming soon**
+**Fine-tuning**
 
 | Command | What it does |
 |---|---|
-| [`rehearsal train`](#rehearsal-train) | Train a model on a world with reinforcement learning |
-| [`rehearsal run-bundle`](#rehearsal-run-bundle) | Start a world from an exported bundle on your own machine |
+| [`rehearsal train`](#rehearsal-train) | Fine-tune a model on a world with reinforcement learning |
 
 Two options work everywhere: `rehearsal --version` prints the installed version, and `--help` after any
 command prints its arguments.
@@ -105,7 +105,7 @@ rehearsal login [--url <url>] [--with-key] [--no-browser]
 
 | Argument | Default | Meaning |
 |---|---|---|
-| `--url <url>` |  | Rehearsal server (default: REHEARSAL_URL, the last server you signed in to, or https://rehearsalkit.xyz) |
+| `--url <url>` |  | Rehearsal server (default: REHEARSAL_URL, the last server you signed in to, or http://localhost:7800) |
 | `--with-key` |  | Paste an API key instead of approving in the browser (servers, CI) |
 | `--no-browser` |  | Print the approval link instead of opening a browser. |
 
@@ -720,6 +720,32 @@ rehearsal export-replay <stream> <dest> [--episode <episode>]
 rehearsal export-replay <run_id> replay.json
 ```
 
+### rehearsal run-bundle
+
+Start a world from an exported bundle on your own machine (not built yet).
+
+Not built yet. The command prints a message that says so and exits.
+
+```text
+rehearsal run-bundle <bundle>
+```
+
+| Argument | Default | Meaning |
+|---|---|---|
+| `<bundle>` | required | Not used yet. |
+
+```bash
+rehearsal run-bundle world.tar
+```
+
+<Output>
+
+```text
+Starting a world from a bundle on your own machine is not built yet. Today, evaluate the published world through the server: rehearsal eval <world_version_id> --profile <agent_id>.
+```
+
+</Output>
+
 ## AI assistants
 
 ### rehearsal mcp
@@ -920,11 +946,11 @@ rehearsal prices
 
 For each model chain, the command prints the price the server charges at, with its source and date, and the range that other hosts charge.
 
-## Coming soon
+## Fine-tuning
 
 ### rehearsal train
 
-<Label kind="coming-soon" /> Train a model on a world with reinforcement learning.
+<Label kind="meta-muse" /> Fine-tune a model on a world with reinforcement learning.
 
 Not built yet. The command prints a message that says so and exits.
 
@@ -935,7 +961,7 @@ rehearsal train <wv_id> [--base-model <base_model>] [--rounds <rounds>] [--rollo
 | Argument | Default | Meaning |
 |---|---|---|
 | `<wv_id>` | required | World version id, from `rehearsal worlds list`. |
-| `--base-model <base_model>` | `Qwen/Qwen3-1.7B` | Not used yet. |
+| `--base-model <base_model>` |  | Not used yet. |
 | `--rounds <rounds>` | `2` | Not used yet. |
 | `--rollouts <rollouts>` | `4` | Not used yet. |
 | `--serve-url <serve_url>` | `http://127.0.0.1:8001/v1` | Not used yet. |
@@ -947,33 +973,7 @@ rehearsal train <wv_id>
 <Output>
 
 ```text
-Training a model on your practice worlds (reinforcement learning) is coming soon. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.
-```
-
-</Output>
-
-### rehearsal run-bundle
-
-<Label kind="coming-soon" /> Start a world from an exported bundle on your own machine.
-
-Not built yet. The command prints a message that says so and exits.
-
-```text
-rehearsal run-bundle <bundle>
-```
-
-| Argument | Default | Meaning |
-|---|---|---|
-| `<bundle>` | required | Not used yet. |
-
-```bash
-rehearsal run-bundle world.tar
-```
-
-<Output>
-
-```text
-Starting a world from a bundle on your own machine is coming soon. Today, evaluate the published world through the server: rehearsal eval <world_version_id> --profile <agent_id>.
+Fine-tuning a Meta Muse model on your practice worlds (reinforcement learning) is not built yet. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.
 ```
 
 </Output>

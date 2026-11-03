@@ -127,7 +127,7 @@ Each operation below shows the least access it accepts. `admin` is accepted ever
 | [`PUT /v1/admin/organizations/{org_id}`](#put-v1adminorganizationsorg_id) | Puts a workspace on any plan, without payment, and optionally changes single limits (null = no limit) |
 | [`POST /v1/admin/organizations/{org_id}/credits`](#post-v1adminorganizationsorg_idcredits) | Adds builds or episodes to a workspace for this month |
 | [`GET /v1/training-jobs`](#get-v1training-jobs) | Training jobs |
-| [`POST /v1/training-jobs`](#post-v1training-jobs) | Answers that training is coming soon |
+| [`POST /v1/training-jobs`](#post-v1training-jobs) | Answers that fine-tuning a Meta Muse model is not built yet |
 | [`GET /v1/training-jobs/{tj_id}`](#get-v1training-jobstj_id) | One training job |
 
 ## Who you are
@@ -1176,14 +1176,14 @@ Training jobs. None can exist yet.
 
 <Operation method="POST" path="/v1/training-jobs" access="write" />
 
-Answers that training is coming soon.
+Answers that fine-tuning a Meta Muse model is not built yet.
 
 Request body, as JSON:
 
 | Field | Type | Default |
 |---|---|---|
 | `world_version_id` | string | required |
-| `base_model` | string | `"Qwen/Qwen3-1.7B"` |
+| `base_model` | string | `""` |
 | `rounds` | integer, 1 to 6 | `2` |
 | `rollouts_per_scenario` | integer, 1 to 32 | `4` |
 | `serve_base_url` | string | `"http://127.0.0.1:8001/v1"` |

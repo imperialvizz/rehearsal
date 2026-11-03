@@ -6,8 +6,11 @@ section, so write it before tagging.
 ## Unreleased
 
 - Every role runs on Meta's Muse models by default: Muse Spark 1.3 on the Meta Model API (`MODEL_API_KEY`), Muse
-  Wonder 1.0 for the hardest compiler roles and the fix loop, and the open weights of Muse Spark Open on Fireworks and
-  Baseten as fallbacks. New providers `meta` and `baseten`; `nebius` and `nvidia` are removed.
+  Wonder 1.0 for the hardest compiler roles and the fix loop, on the Meta Model API. New providers `meta` and `baseten`; `nebius` and `nvidia` are removed.
+- Muse only: every default chain needs only `MODEL_API_KEY`. The agent under test runs on one model per run, and
+  the simulated customer on Muse Spark's Contributor tier (`muse-spark-1.3-contributor`), with Standard behind it.
+  A provider without a key no longer stops a chain from waiting out another provider's rate limit.
+- `scripts/install-muse-code.sh` adds the Rehearsal plugin to Muse Code; the docs have a Muse Code page.
 - A chain entry ends in `#minimal`, `#low`, `#medium`, `#high`, `#xhigh` or `#max`, sent as `reasoning_effort`.
   `#think` and `#nothink` are removed.
 - Meta Model API prices are built in. The Agent Factory's `agent.py` runs on Muse Spark (`MODEL_API_KEY`).

@@ -153,8 +153,8 @@ This document turns the [scope](scope.md) into requirements. The [spec](spec.md)
 | S2 | A scripted agent that claims "done" without acting fails; a duplicate effect after a timeout is counted. |
 | S3 | `rehearsal improve` produces a new version and `rehearsal compare` shows both runs on held-out jobs. |
 | S4 | The docs' quickstarts take a new user to a first result. |
-| S5 | rehearsalkit.xyz serves the console, accepts payments, and refuses to start an unpriced job. |
-| S6 | Each role's model calls go to Meta's Muse models: the Meta Model API first, then Muse Spark Open on Fireworks and Baseten. |
+| S5 | The server serves the console (locally at http://localhost:7800), accepts payments, and refuses to start an unpriced job. |
+| S6 | Each role's model calls go to Meta's Muse models: Muse Spark and Muse Wonder on the Meta Model API. |
 | S7 | `rehearsal autofix` returns every round with its score and decision, and the held-out scores of the original and the best version. |
 | S8 | `rehearsal gate` exits 1 with a report when the change verifies less than the baseline or breaks a rule, and exits 2, not 1, when the run cannot start. |
 
@@ -173,6 +173,6 @@ This document turns the [scope](scope.md) into requirements. The [spec](spec.md)
 | World Compiler, validation, evaluation, verdict, improvement, comparison | Shipped |
 | Fix loop, Agent Factory, pull request checks, failure causes, model usage by role, web research for builds | Shipped (October 2026) |
 | CLI, SDK, MCP server, agent plugin, console, docs | Shipped (`rehearsal-kit` 0.1.3) |
-| Hosted service with plans and live payments | Shipped (rehearsalkit.xyz) |
+| Hosted service with plans and live payments | Not deployed: this build runs on one machine, at http://localhost:7800 |
 | Weight training, world bundle replay | Planned (`rehearsal train` and `rehearsal run-bundle` report "not implemented") |
 | Browser-only worlds, per-job VM isolation | Planned |

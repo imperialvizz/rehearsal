@@ -40,7 +40,7 @@ export function Cost({ amount, children }: { amount?: string; children: ReactNod
 /* ---- Small marks ---- */
 
 const LABELS = {
-  "coming-soon": ["Coming soon", "border-info/30 bg-info/10 text-info"],
+  "meta-muse": ["Meta Muse", "border-info/30 bg-info/10 text-info"],
   "self-hosted": ["Self-hosted only", "border-border bg-muted text-muted-foreground"],
   hosted: ["Hosted only", "border-border bg-muted text-muted-foreground"],
   generated: ["Generated from the code", "border-border bg-muted text-muted-foreground"],
