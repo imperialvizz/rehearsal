@@ -1,0 +1,107 @@
+---
+title: Muse Code
+description: Add the Rehearsal plugin to Meta's Muse Code, check that the tools are there, and remove it again.
+audience: Muse Code users
+last_reviewed: 2026-11-03
+time: 5 minutes
+needs: Muse Code, and a clone of the repository set up with scripts/setup.sh
+---
+
+Muse Code is Meta's coding agent, and it runs on the same Muse models as Rehearsal. With the Rehearsal plugin, it
+builds worlds, runs evaluations, explains failed episodes and improves your agent for you.
+
+## Install
+
+In your clone of the repository, after `scripts/setup.sh`:
+
+```bash
+bash scripts/install-muse-code.sh
+```
+
+The script does two things:
+
+1. It installs the Rehearsal skill with `muse skills install agent-plugin/providers/muse-code/skills/rehearsal --scope user`.
+2. It adds a server named `rehearsal` to `mcp_servers` in `~/.config/muse/settings.json`. The server runs this clone's
+   `rehearsal mcp`. It keeps your other settings, and saves the old file as `settings.json.bak`.
+
+The server is `optional`: when it cannot start, Muse Code warns and the session goes on. Run the script again after
+you move the clone.
+
+## Sign in
+
+`scripts/setup.sh` already signed this machine in, and the MCP server uses that sign-in. Keep `rehearsal serve`
+running: every tool calls it.
+
+On another machine, sign in to your server once:
+
+```bash
+rehearsal login --url http://localhost:7800
+```
+
+## Check that it works
+
+Start a new Muse Code session and ask:
+
+```text
+Show my Rehearsal workspace status.
+```
+
+Muse Code calls `workspace_status` and reports what exists in the workspace. If the tool answers that Rehearsal is not
+signed in, run the sign-in command above and ask again.
+
+## What to ask
+
+```text
+Build a practice world from the Vikunja application. Tell me the cost first.
+```
+
+```text
+Evaluate my support agent on the published Vikunja world. Use the dev jobs and two repeats.
+The instructions are in agent/instructions.txt.
+```
+
+```text
+Why did the failed episodes fail? Group the causes, and say which fix would help most.
+```
+
+```text
+Improve the agent from those failures, then compare both versions on holdout.
+```
+
+Muse Code states the cost and waits for your yes before anything that spends model budget. More prompts are in
+[AI assistants](/ai-assistants#what-to-ask).
+
+## By hand
+
+Install the skill:
+
+```bash
+muse skills install agent-plugin/providers/muse-code/skills/rehearsal --scope user
+```
+
+Then add this block to `~/.config/muse/settings.json`. Put the full path of `rehearsal` in your clone's `.venv` in
+`command` (`.venv/Scripts/rehearsal.exe` on Windows):
+
+```json
+{
+  "schema_version": 1,
+  "mcp_servers": {
+    "rehearsal": {
+      "transport": "stdio",
+      "command": "/path/to/rehearsal/.venv/bin/rehearsal",
+      "args": ["mcp"],
+      "mode": "optional"
+    }
+  }
+}
+```
+
+## Remove
+
+Delete the `rehearsal` entry under `mcp_servers` in `~/.config/muse/settings.json`, or put `settings.json.bak` back,
+and remove the `rehearsal` skill from Muse Code. To end the access as well, revoke the key on the console's
+**API keys** page, and remove the saved sign-in:
+
+```bash
+rehearsal logout
+```

@@ -72,7 +72,7 @@ export function Profile() {
 export function CodingAgents() {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(location.origin), []);
-  const login = `uvx --from rehearsal-kit rehearsal login${origin && origin !== "https://rehearsalkit.xyz" ? ` --url ${origin}` : ""}`;
+  const login = `uvx --from rehearsal-kit rehearsal login${origin && origin !== "http://localhost:7800" ? ` --url ${origin}` : ""}`;
   const mcp = JSON.stringify({ mcpServers: { rehearsal: { command: "uvx", args: ["--from", "rehearsal-kit[mcp]>=0.1.1", "rehearsal", "mcp"] } } }, null, 2);
   const step = (title: string, description: ReactNode, commands: string[]) => (
     <Card>
@@ -82,14 +82,15 @@ export function CodingAgents() {
   );
   return (
     <>
-      <PageHeader title="Coding agents" description="Let Claude Code, Codex or another assistant build worlds and run evaluations for you. It uses your workspace through the Rehearsal skill and MCP server, and asks before anything that spends your allowance." />
+      <PageHeader title="Coding agents" description="Let Muse Code, Claude Code, Codex or another assistant build worlds and run evaluations for you. It uses your workspace through the Rehearsal skill and MCP server, and asks before anything that spends your allowance." />
       <div className="grid gap-4">
         {step("1. Sign in from your terminal", <>Opens this console to approve the sign-in. The terminal receives a &quot;Build and evaluate&quot; key, saved for your user only. You can revoke it on the <a className="underline underline-offset-2" href={routes.apiKeys}>API keys</a> page.</>, [login])}
-        {step("2a. Claude Code", "Installs the skill and the MCP server.", ["claude plugin marketplace add MitudruDutta/rehearsal", "claude plugin install rehearsal@rehearsal"])}
-        {step("2b. Codex CLI", "Installs the skill and the MCP server.", ["codex plugin marketplace add MitudruDutta/rehearsal", "codex plugin add rehearsal@rehearsal"])}
+        {step("2a. Muse Code (Meta)", "In your clone of the repository, after scripts/setup.sh: installs the skill and adds the MCP server to ~/.config/muse/settings.json.", ["bash scripts/install-muse-code.sh"])}
+        {step("2b. Claude Code", "Installs the skill and the MCP server.", ["claude plugin marketplace add MitudruDutta/rehearsal", "claude plugin install rehearsal@rehearsal"])}
+        {step("2c. Codex CLI", "Installs the skill and the MCP server.", ["codex plugin marketplace add MitudruDutta/rehearsal", "codex plugin add rehearsal@rehearsal"])}
         <Card>
           <CardHeader>
-            <CardTitle>2c. Any other MCP client</CardTitle>
+            <CardTitle>2d. Any other MCP client</CardTitle>
             <CardDescription>Cursor, Claude Desktop, Windsurf, Antigravity and others: add this server to the client&apos;s MCP settings. It needs <a className="underline underline-offset-2" href="https://docs.astral.sh/uv/" target="_blank" rel="noreferrer">uv</a>.</CardDescription>
           </CardHeader>
           <CardContent><pre className="overflow-x-auto rounded-md border bg-muted/40 p-3 font-mono text-xs">{mcp}</pre></CardContent>
