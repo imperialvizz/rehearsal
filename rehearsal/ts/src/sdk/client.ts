@@ -14,7 +14,8 @@ import { basename, dirname, join } from "node:path";
 /** This package's version, from its package.json (kept equal to the Python package's by the release checks). */
 export const VERSION: string = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version;
 
-export const DEFAULT_URL = "https://rehearsalkit.xyz"; // the hosted service; a server of your own: `rehearsal login --url ...` or REHEARSAL_URL
+export const DEFAULT_URL = "http://localhost:7800"; // the server `rehearsal serve` runs on this machine; another: `rehearsal login --url ...` or REHEARSAL_URL
+
 
 // API payloads are documented in the server's OpenAPI reference (/api/docs); results are plain JSON objects.
 export type Json = Record<string, any>;

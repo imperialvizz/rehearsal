@@ -51,9 +51,9 @@ inputs:
     required: false
     default: "90"
   server:
-    description: The Rehearsal server.
+    description: The address of your Rehearsal server.
     required: false
-    default: https://rehearsalkit.xyz
+    default: http://localhost:7800
 
 runs:
   using: composite
