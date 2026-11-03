@@ -1,7 +1,7 @@
 name: Tests
 
-# Every pull request and every push to main runs the whole suite. The publish workflow calls this same workflow,
-# so a release is built only from a commit that passes exactly these checks.
+# Every pull request and every push to main runs the whole suite. The package build workflow (publish.yml) calls
+# this same workflow, so packages are built only from a commit that passes exactly these checks. CI never uploads them.
 
 on:
   pull_request:

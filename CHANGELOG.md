@@ -1,7 +1,7 @@
 # Changelog
 
-Every release of `rehearsal-kit` has a section here. The publish workflow refuses a release whose version has no
-section, so write it before tagging.
+Every release of `rehearsal-kit` has a section here. The package build workflow warns when the version has no
+section, so write it before building. CI builds and checks the packages but never uploads them.
 
 ## 0.1.4
 
@@ -32,6 +32,8 @@ section, so write it before tagging.
   `customer`, operation `reply`), so a job's checks can read it. When no job passes validation, the build writes the
   jobs again once from the same plan, with a fresh round for the money guard.
 - A provider without a key no longer makes a model chain wait out another provider's rate limit.
+- CI no longer uploads packages: the publish workflow lost its PyPI and npm upload jobs and its release trigger. A
+  manual run builds and checks both packages, and keeps the files as workflow artifacts.
 - The library names no model vendor and no default model. A project chooses each role's chain in the
   `REHEARSAL_MODEL_*` settings (a role left empty uses the compiler's chain), adds providers beyond the built-in ones
   in `REHEARSAL_PROVIDERS` (address, the setting that holds the key, and an optional `tool_choice`), and prices them
