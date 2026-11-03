@@ -6,7 +6,7 @@
 3. Harden it with the fix loop (worker/autofix.py), which keeps only versions that verify more and compares the best
    with the draft on held-out jobs. When no round was needed, the draft is proved on held-out jobs alone.
 4. Package a zip: the instructions, the tool definitions mapped to the application's real API, a standalone Python
-   agent that runs on Meta's Muse Spark through the Meta Model API, and a proof report with every score.
+   agent that runs on the server's agent model through that model's own API, and a proof report with every score.
 
 Each phase is saved in the job checkpoint under "factory"; the fix loop keeps its own state under "autofix".
 """
@@ -19,7 +19,7 @@ import zipfile
 from datetime import datetime, timezone
 from typing import Any
 
-from ..agents.llm import LLMError, chat_json
+from ..agents.llm import LLMError, base_url, chat_json, parse_chain
 from ..compiler import web
 from ..config import settings
 from ..core.contracts import AgentProfile, WorldManifest
@@ -30,7 +30,11 @@ from . import autofix, improve
 from .context import JobContext
 from .export import _artifact
 
-MODEL = "muse-spark-1.3"  # what the packaged agent runs on by default (Meta Model API)
+def _packaged_model() -> tuple[str, str, str]:
+    """What the packaged agent runs on by default: the first entry of the server's agent chain, as (API address,
+    model, reasoning effort)."""
+    provider, model, effort = parse_chain(settings().model_agent)[0]
+    return base_url(provider), model, effort or "medium"
 
 
 def _world(wv_id: str) -> dict[str, Any]:
@@ -153,7 +157,8 @@ def export_spec(manifest: WorldManifest, profile: AgentProfile, name: str) -> di
         tools.append({"name": t.name, "description": (t.description + (f"\nGuidance: {guidance}" if guidance else ""))[:1000], "service": t.service,
                       "method": t.method, "path": t.path, "graphql": t.graphql, "mutating": t.mutating, "parameters": t.json_schema(),
                       "params": [{"name": x.name, "location": x.location} for x in t.params]})
-    return {"name": name, "version": profile.version, "role": role, "model": MODEL, "reasoning_effort": "medium", "system_prompt": prompt,
+    base, model, effort = _packaged_model()
+    return {"name": name, "version": profile.version, "role": role, "base_url": base, "model": model, "reasoning_effort": effort, "system_prompt": prompt,
             "services": sorted({t["service"] for t in tools}), "tools": tools}
 
 
@@ -208,7 +213,7 @@ An AI agent for the **{spec['role']}** role, built and verified by Rehearsal. PR
 
 ```bash
 pip install openai httpx
-export MODEL_API_KEY=...                 # Meta Model API (dev.meta.ai); it runs on {spec['model']}
+export MODEL_API_KEY=...                 # the key for {spec['base_url']}; it runs on {spec['model']}
 export APP_URL=https://your-app.example  # base address of your application's API
 {urls}
 export APP_AUTH="Authorization: token ..."   # the header for an account of the {spec['role']} role
@@ -233,7 +238,7 @@ from openai import OpenAI
 
 SPEC = json.loads(Path(__file__).with_name("agent.json").read_text(encoding="utf-8"))
 TOOLS = {t["name"]: t for t in SPEC["tools"]}
-llm = OpenAI(base_url=os.environ.get("MODEL_BASE_URL", "https://api.meta.ai/v1"), api_key=os.environ["MODEL_API_KEY"])
+llm = OpenAI(base_url=os.environ.get("MODEL_BASE_URL", SPEC["base_url"]), api_key=os.environ["MODEL_API_KEY"])
 MODEL = os.environ.get("MODEL", SPEC["model"])
 EXTRA = {"reasoning_effort": SPEC.get("reasoning_effort", "medium")} if "MODEL" not in os.environ else {}
 

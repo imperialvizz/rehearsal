@@ -93,15 +93,10 @@ def settings() -> Settings:
     quiet = env("REHEARSAL_QUIET_HOURS_UTC", "18:00-02:00")
     if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d", quiet):
         raise ValueError(f"REHEARSAL_QUIET_HOURS_UTC must look like 18:00-02:00, not {quiet!r}")
-    # Meta's Muse models, routed by role through reasoning effort: the Meta Model API first, then the open weights of
-    # Muse Spark Open on Fireworks and Baseten (Baseten does not document reasoning_effort, so its entry keeps the
-    # model's default). The hardest roles (designing, judging and repairing jobs, proposing a better agent) start on
-    # Muse Wonder, where a wrong answer costs a whole build; tool work runs on Muse Spark at medium; the simulated
-    # customer, whose replies are short and must be fast, on Muse Spark at the lowest level.
-    spark, fireworks, baseten = ("meta:muse-spark-1.3", "fireworks:accounts/fireworks/models/muse-spark-open",
-                                 "baseten:meta-models/muse-spark-open")
-    default_reasoner = f"meta:muse-wonder-1.0#high,{spark}#xhigh,{fireworks}#xhigh,{baseten}"
-    default_chain = f"{spark}#medium,{fireworks}#medium,{baseten}"
+    # The library names no model: each role's chain comes from the environment (.env.example lists them). The compiler's
+    # chain stands in for any role that is not set, and the reasoner's for the improver.
+    compiler = env("REHEARSAL_MODEL_COMPILER") or ""
+    reasoner = env("REHEARSAL_MODEL_REASONER") or compiler
     return Settings(
         database_url=env(
             "REHEARSAL_DATABASE_URL", "postgresql+psycopg://rehearsal:rehearsal@127.0.0.1:5433/rehearsal"
@@ -109,11 +104,11 @@ def settings() -> Settings:
         data_dir=data_dir,
         session_secret=env("REHEARSAL_SESSION_SECRET", "dev-only-session-secret"),
         source_roots=roots,
-        model_compiler=env("REHEARSAL_MODEL_COMPILER") or default_chain,
-        model_agent=env("REHEARSAL_MODEL_AGENT") or default_chain,
-        model_participant=env("REHEARSAL_MODEL_PARTICIPANT") or f"{spark}#minimal,{fireworks}#low,{baseten}",
-        model_improver=env("REHEARSAL_MODEL_IMPROVER") or env("REHEARSAL_MODEL_REASONER") or default_reasoner,
-        model_reasoner=env("REHEARSAL_MODEL_REASONER") or default_reasoner,
+        model_compiler=compiler,
+        model_agent=env("REHEARSAL_MODEL_AGENT") or compiler,
+        model_participant=env("REHEARSAL_MODEL_PARTICIPANT") or compiler,
+        model_improver=env("REHEARSAL_MODEL_IMPROVER") or reasoner,
+        model_reasoner=reasoner,
         kaggle_api_token=env("KAGGLE_API_TOKEN") or None,
         google_client_id=env("GOOGLE_CLIENT_ID") or None,
         signup=env("REHEARSAL_SIGNUP", "open"),

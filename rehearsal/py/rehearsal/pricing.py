@@ -4,10 +4,10 @@ A call is charged at, in order of preference:
 
 1. the cost the provider returned for that request (OpenRouter ``usage.cost``);
 2. the serving provider's own published price list (OpenRouter and LiteLLM
-   proxies expose per-token prices on their model endpoints; the Meta Model API
-   prices below are copied from its pricing page);
+   proxies expose per-token prices on their model endpoints);
 3. a price from ``pricing.yaml`` (or ``REHEARSAL_PRICES``); each entry names its
-   source and date;
+   source and date. A provider that publishes no machine-readable price list has
+   its prices entered there;
 4. for vendors called on their own API (OpenAI, Anthropic, Google, Mistral, xAI,
    DeepSeek), the vendor's price as OpenRouter's catalogue lists it; for hosts of
    open models (Groq, Together, Fireworks, Baseten, Cerebras), that host's own price from
@@ -93,20 +93,6 @@ def _today() -> str:
 # --------------------------------------------------------------------------- sources
 
 
-# USD per 1M tokens [input, output], uncached. shortcut: copied by hand because the Meta Model API publishes no
-# machine-readable price list; update this table when the pricing page changes.
-META_PRICES = {
-    "muse-wonder-1.0": (4.00, 20.00),
-    **{f"muse-spark-1.{v}": (1.25, 4.25) for v in (1, 2, 3)},
-    **{f"muse-spark-1.{v}-contributor": (0.10, 0.20) for v in (2, 3)},
-}
-
-
-def _meta_list() -> dict[str, Quote]:
-    url = "https://dev.meta.ai/docs/pricing-rate-limits"
-    return {m: Quote("meta", m, i, o, "meta price list", url, "2026-11-03") for m, (i, o) in META_PRICES.items()}
-
-
 def _openrouter_list() -> dict[str, Quote]:
     url = "https://openrouter.ai/api/v1/models"
     data = httpx.get(url, timeout=20).json()
@@ -153,7 +139,7 @@ def _overrides() -> dict[str, Quote]:
     return out
 
 
-LISTS = {"meta": _meta_list, "openrouter": _openrouter_list, "litellm": _litellm_list}
+LISTS = {"openrouter": _openrouter_list, "litellm": _litellm_list}
 # Vendors called on their own API, and their prefix in OpenRouter model ids (which lists them at the vendor's price).
 VENDORS = {"openai": "openai", "anthropic": "anthropic", "google": "google", "mistral": "mistralai", "xai": "x-ai", "deepseek": "deepseek"}
 # Hosts of open models, and their name in OpenRouter's listing of a model's hosts (which shows each host's price).

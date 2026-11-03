@@ -246,7 +246,7 @@ def priced_reply(offline_pricing, monkeypatch):
     return reply
 
 
-@pytest.mark.parametrize("provider", ["meta", "openrouter"])
+@pytest.mark.parametrize("provider", ["litellm", "openrouter"])
 def test_serving_provider_price_precedes_configured_override(offline_pricing, monkeypatch, provider):
     published = pricing.Quote(provider, "fixture-model", 2, 6, "provider price list")
     listing = Mock(return_value={"fixture-model": published})

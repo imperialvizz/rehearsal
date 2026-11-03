@@ -23,6 +23,15 @@ def manifest():
     })
 
 
+@pytest.fixture(autouse=True)
+def agent_model(monkeypatch):
+    """The packaged agent runs on the server's agent model, which the settings choose."""
+    monkeypatch.setenv("REHEARSAL_MODEL_AGENT", "openai:model-a#low,openai:model-b")
+    factory.settings.cache_clear()
+    yield
+    factory.settings.cache_clear()
+
+
 def test_the_packaged_agent_plays_the_customer_role_with_only_its_tools():
     profile = AgentProfile(name="desk-agent", version=3, system_prompt="You are {actor_id} as {role}. {instructions}", tool_guidance={"update_ticket": "Read it first."})
     spec = factory.export_spec(manifest(), profile, "desk-agent")
@@ -31,7 +40,8 @@ def test_the_packaged_agent_plays_the_customer_role_with_only_its_tools():
     tool = spec["tools"][0]
     assert tool["method"] == "PATCH" and tool["path"] == "/api/tickets/{id}" and "Guidance: Read it first." in tool["description"]
     assert {p["name"]: p["location"] for p in tool["params"]} == {"id": "path", "status": "body", "notify": "query"}
-    assert spec["model"].startswith("muse-spark") and spec["services"] == ["app"]
+    assert (spec["model"], spec["reasoning_effort"], spec["services"]) == ("model-a", "low", ["app"])  # the server's agent model
+    assert spec["base_url"] == "https://api.openai.com/v1"  # and that model's own API
 
 
 def load_agent(tmp_path, monkeypatch, spec):
@@ -111,8 +121,8 @@ def test_the_proof_report_shows_every_score_and_what_is_left():
     text = factory.proof_report({"name": "desk", "version": 2}, st, {"name": "desk-agent", "version": 3}, causes)
     assert "| v1, the draft | 50% | 33% |" in text and "| v3, packaged | 83% | 67% |" in text
     assert "Round 1: v2 verified 40%, discarded" in text and "Did the same thing twice: 1 episode." in text
-    readme = factory.readme({"name": "desk-agent", "version": 3, "role": "agent", "model": "m", "services": ["app"], "tools": [{}]})
-    assert "python agent.py" in readme and "CONFIRM_WRITES=0" in readme
+    readme = factory.readme({"name": "desk-agent", "version": 3, "role": "agent", "base_url": "https://llm.example/v1", "model": "m", "services": ["app"], "tools": [{}]})
+    assert "python agent.py" in readme and "CONFIRM_WRITES=0" in readme and "the key for https://llm.example/v1" in readme
 
 
 @pytest.mark.parametrize("name", ["Desk Agent!", "a/b"])

@@ -6,8 +6,8 @@ provider/model actually answered so evaluations stay attributable.
 Provider keys are read server-side only.
 
 An entry may end in ``#minimal``, ``#low``, ``#medium``, ``#high``, ``#xhigh``
-or ``#max`` to set ``reasoning_effort`` for that entry only (the switch Meta's
-Muse models read), so a fast role spends few reasoning tokens.
+or ``#max`` to set ``reasoning_effort`` for that entry only, so a fast role
+spends few reasoning tokens.
 
 While a job runs, ``usage`` collects calls, tokens, cost and latency per role.
 """
@@ -33,7 +33,6 @@ from .. import pricing
 log = logging.getLogger(__name__)
 
 PROVIDERS: dict[str, tuple[str, str]] = {
-    "meta": ("https://api.meta.ai/v1", "MODEL_API_KEY"),  # Meta Model API (Muse Spark, Muse Wonder); keys at dev.meta.ai
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY"),
     "google": ("https://generativelanguage.googleapis.com/v1beta/openai/", "GOOGLE_API_KEY"),
@@ -57,6 +56,37 @@ class LLMError(Exception):
     def __init__(self, *args: Any, reply: LLMReply | None = None):
         super().__init__(*args)
         self.reply = reply  # Completed response retained for caller usage accounting.
+
+
+def declared() -> dict[str, dict[str, Any]]:
+    """Providers a project adds without changing the library: REHEARSAL_PROVIDERS, a JSON object of
+    {"name": {"base_url": ..., "api_key_env": ..., "tool_choice": ...}}. ``tool_choice``, when given, is sent on every
+    call that offers tools, for an API that accepts only that value."""
+    raw = os.environ.get("REHEARSAL_PROVIDERS", "").strip()
+    if not raw:
+        return {}
+    try:
+        return {name: {"base_url": str(c["base_url"]), "api_key_env": str(c["api_key_env"]), "tool_choice": c.get("tool_choice")}
+                for name, c in json.loads(raw).items()}
+    except (json.JSONDecodeError, AttributeError, KeyError, TypeError) as exc:
+        raise LLMError(f"REHEARSAL_PROVIDERS must be a JSON object of {{name: {{base_url, api_key_env}}}}: {exc}") from exc
+
+
+def providers() -> dict[str, tuple[str, str]]:
+    """Every provider a chain may name: the built-in ones and the project's declared ones, as (base URL, key setting)."""
+    return {**PROVIDERS, **{name: (c["base_url"], c["api_key_env"]) for name, c in declared().items()}}
+
+
+def base_url(provider: str) -> str:
+    """Where a provider is reached; local, custom, litellm and modal read it from the environment."""
+    base = providers()[provider][0]
+    if provider in ("local", "custom"):
+        return os.environ.get(f"REHEARSAL_{provider.upper()}_BASE_URL", "http://127.0.0.1:8001/v1" if provider == "local" else "")
+    if provider == "litellm":
+        return os.environ.get("LITELLM_BASE_URL", base)
+    if provider == "modal":
+        return os.environ.get("MODAL_BASE_URL", "")
+    return base
 
 
 @dataclass
@@ -111,13 +141,14 @@ def parse_chain(chain: str) -> list[tuple[str, str, str | None]]:
             continue
         part, hashed, flag = part.partition("#")
         provider, sep, model = part.partition(":")
-        if not sep or provider not in PROVIDERS or not model:
-            raise LLMError(f"bad model entry {part!r}; expected provider:model with provider in {sorted(PROVIDERS)}")
+        known = providers()
+        if not sep or provider not in known or not model:
+            raise LLMError(f"bad model entry {part!r}; expected provider:model with provider in {sorted(known)}")
         if hashed and flag not in EFFORTS:
             raise LLMError(f"bad reasoning effort #{flag} in {part!r}; use one of " + ", ".join(f"#{e}" for e in EFFORTS))
         entries.append((provider, model, flag if hashed else None))
     if not entries:
-        raise LLMError("empty model chain")
+        raise LLMError("no model is set for this role: set the REHEARSAL_MODEL_* settings (see .env.example)")
     return entries
 
 
@@ -169,14 +200,9 @@ _clients: dict[str, Any] = {}
 
 def _client(provider: str) -> Any:
     if provider not in _clients:
-        base, key_env = PROVIDERS[provider]
-        if provider in ("local", "custom"):
-            base = os.environ.get(f"REHEARSAL_{provider.upper()}_BASE_URL", "http://127.0.0.1:8001/v1" if provider == "local" else "")
+        key_env, base = providers()[provider][1], base_url(provider)
         key = os.environ.get(key_env) or ("local" if provider == "local" else "")
-        if provider == "litellm":
-            base = os.environ.get("LITELLM_BASE_URL", base)
         if provider == "modal":
-            base = os.environ.get("MODAL_BASE_URL", "")
             secret = os.environ.get("MODAL_PROXY_TOKEN_SECRET", "")
             key = f"{key}.{secret}" if key and secret else ""
         if not key or not base:
@@ -314,6 +340,7 @@ def _try_chain(
 ) -> tuple[LLMReply | None, bool, list[float | None]]:
     """One pass over the chain: (reply, every failure was a rate limit/timeout, retry hints)."""
     only_limits = True
+    configured = False  # no provider of the chain has a key: waiting cannot help
     waits: list[float | None] = []
     for provider, model, effort in entries:
         if _billing_blocked.get(provider, 0) > time.time():
@@ -330,13 +357,15 @@ def _try_chain(
             try:
                 client = _client(provider)
             except LLMError as exc:
+                # a provider without a key is skipped; it must not stop the chain waiting out a rate limit elsewhere
                 attempts.append(f"{provider}:{model} unavailable: {exc}")
-                only_limits = False
                 break
+            configured = True
             kwargs: dict[str, Any] = {"model": model, "messages": _for_provider(messages, provider), "temperature": temperature, "max_tokens": max_tokens}
             if tools:
                 kwargs["tools"] = tools
-                kwargs["tool_choice"] = tool_choice or "auto"
+                # a declared provider may accept one value only; callers that want a tool call offer just that tool and ask for it
+                kwargs["tool_choice"] = declared().get(provider, {}).get("tool_choice") or tool_choice or "auto"
             if response_json and not tools:
                 kwargs["response_format"] = {"type": "json_object"}
             extra: dict[str, Any] = {}
@@ -404,7 +433,7 @@ def _try_chain(
                 latency_ms=int((time.perf_counter() - started) * 1000),
             )
             return reply, False, waits
-    return None, only_limits, waits
+    return None, only_limits and configured, waits
 
 
 def chat_json(
