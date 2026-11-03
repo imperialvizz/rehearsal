@@ -53,6 +53,10 @@ def main(argv: list[str] | None = None) -> None:
 
     from .client import RehearsalError
 
+    # Windows writes redirected output in its legacy code page; a character outside it must not end the command
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     try:
         _main(argv)
     except RehearsalError as exc:
@@ -353,9 +357,9 @@ def _main(argv: list[str] | None = None) -> None:
     exp.add_argument("run_ids", nargs="+")
     exp.add_argument("--split", action="append", default=[])
 
-    tr = cmd("train", "train a model on a world with reinforcement learning")
+    tr = cmd("train", "fine-tune a model on a world with reinforcement learning")
     tr.add_argument("wv_id")
-    tr.add_argument("--base-model", default="Qwen/Qwen3-1.7B")
+    tr.add_argument("--base-model", default="")
     tr.add_argument("--rounds", type=int, default=2)
     tr.add_argument("--rollouts", type=int, default=4)
     tr.add_argument("--serve-url", default="http://127.0.0.1:8001/v1")
@@ -376,17 +380,17 @@ def _main(argv: list[str] | None = None) -> None:
     rep.add_argument("dest")
     rep.add_argument("--episode", help="only this episode's events (runs)")
 
-    run_b = cmd("run-bundle", "start a world from an exported bundle on your own machine")
+    run_b = cmd("run-bundle", "start a world from an exported bundle on your own machine (not built yet)")
     run_b.add_argument("bundle")
 
     groups = [
         ("Start", ["login", "whoami", "logout"]),
         ("Applications and worlds", ["apps", "build", "worlds", "jobs"]),
         ("Agents and evaluations", ["profiles", "eval", "runs", "compare", "improve", "autofix", "factory", "gate"]),
-        ("Data", ["export", "artifacts", "export-example", "export-replay"]),
+        ("Data", ["export", "artifacts", "export-example", "export-replay", "run-bundle"]),
         ("AI assistants", ["mcp", "skill"]),
         ("Run your own server", ["serve", "worker", "up", "migrate", "bootstrap", "users", "openapi", "prices"]),
-        ("Coming soon", ["train", "run-bundle"]),
+        ("Fine-tuning", ["train"]),
     ]
     assert sorted(n for _, names in groups for n in names) == sorted(summaries), "every command belongs to one help group"
     width = max(map(len, summaries)) + 2
@@ -608,7 +612,7 @@ def _main(argv: list[str] | None = None) -> None:
     elif args.cmd == "export":
         _print(_client().post("/v1/dataset-exports", {"run_ids": args.run_ids, "splits": args.split or ["train"]}))
     elif args.cmd == "train":
-        sys.exit("Training a model on your practice worlds (reinforcement learning) is coming soon. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.")
+        sys.exit("Fine-tuning a model on your practice worlds (reinforcement learning) is not built yet. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.")
     elif args.cmd == "artifacts":
         c = _client()
         if args.sub == "list":
@@ -668,7 +672,7 @@ def _main(argv: list[str] | None = None) -> None:
         print(f"saved {len(events)} events to {args.dest}" + ("" if events else
               " (a replay holds build and episode activity; this job or run has none yet)"))
     elif args.cmd == "run-bundle":
-        sys.exit("Starting a world from a bundle on your own machine is coming soon. Today, evaluate the published world "
+        sys.exit("Starting a world from a bundle on your own machine is not built yet. Today, evaluate the published world "
                  "through the server: rehearsal eval <world_version_id> --profile <agent_id>.")
 
 

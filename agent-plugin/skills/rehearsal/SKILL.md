@@ -88,7 +88,7 @@ Rules:
 - **"Test on our app" / "add Chatwoot"**: **Build a world** (references/applications.md).
 - **"Compare A and B"**: Evaluate both in one run, or two runs on the same world version, then `compare_runs`.
 - **"Something failed"**: references/troubleshooting.md.
-- **"Train / fine-tune a model on this"**: not available yet. Training with reinforcement learning is coming soon. Offer the two things that work today: `improve_agent` (better instructions from failures) and `rehearsal export RUN_ID --split train` (verified episodes as a dataset).
+- **"Train / fine-tune a model on this"**: not available yet. Fine-tuning a model with reinforcement learning is not built yet. Offer the two things that work today: `improve_agent` (better instructions from failures) and `rehearsal export RUN_ID --split train` (verified episodes as a dataset).
 
 ## Workflow: Evaluate
 
@@ -122,7 +122,7 @@ Rules:
 
 ## Workflow: No agent yet
 
-When the user has a world but no agent, offer `make_agent(world_version_id)`: Rehearsal drafts an agent from the world, hardens it with the fix loop, proves it on holdout, and packages a zip (agent.py on Muse Spark that calls the app's API, agent.json, PROOF.md). Ask first with the episode count. When the job succeeds, give the held-out score from the result and tell the user to download `artifact_id` (`rehearsal artifacts download ID agent.zip` or the console) and to keep CONFIRM_WRITES on against a real application.
+When the user has a world but no agent, offer `make_agent(world_version_id)`: Rehearsal drafts an agent from the world, hardens it with the fix loop, proves it on holdout, and packages a zip (agent.py that calls the app's API, agent.json, PROOF.md). Ask first with the episode count. When the job succeeds, give the held-out score from the result and tell the user to download `artifact_id` (`rehearsal artifacts download ID agent.zip` or the console) and to keep CONFIRM_WRITES on against a real application.
 
 ## Workflow: Improve
 

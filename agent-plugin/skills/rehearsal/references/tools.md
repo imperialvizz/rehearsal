@@ -72,7 +72,7 @@ Python: `from rehearsal.sdk import Rehearsal; rh = Rehearsal()` reads `REHEARSAL
 
 ### `create_agent(name, instructions="", model=None, bring_your_own=False)`
 - `instructions` becomes the system prompt. It may use `{actor_id}`, `{role}` and `{instructions}` (the job's role instructions). Without `{instructions}`, the job's role instructions are added at the end. Empty means the platform default.
-- `model`: a model chain on the server, for example `meta:muse-spark-1.3#medium`. Leave it empty for the server default.
+- `model`: a model chain on the server, written `provider:model#effort`. Leave it empty for the server default.
 - A second profile with the same name becomes version 2. Versions are kept, so results stay comparable.
 - CLI: `rehearsal profiles create NAME [--prompt-file FILE] [--model M] [--external]`.
 
@@ -133,7 +133,7 @@ Details and the loop: bring-your-own-agent.md.
 | Command | What it does |
 |---|---|
 | `rehearsal export RUN_ID... [--split train]` | Export verified trajectories as a dataset |
-| `rehearsal train` | Coming soon: train a model on a world with reinforcement learning. Says so and exits |
+| `rehearsal train` | Fine-tune a model on a world with reinforcement learning: not built yet. Says so and exits |
 | `rehearsal worlds bundle WV_ID [--include-images]` | Export a world to run offline; the file appears under Settings, Exports |
 | `rehearsal run-bundle FILE` | Start an exported world on this machine (needs Docker) |
 | `rehearsal artifacts list` / `download ID DEST` | List and download exports |

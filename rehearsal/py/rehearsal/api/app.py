@@ -94,7 +94,10 @@ async def _billing_refused(request: Request, exc: billing.PlanLimit | billing.Bi
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-STATIC = Path(__file__).resolve().parent / "static"
+# The console: the copy a released package bundles (`pnpm --dir web package`), else, in a clone of the repository, the
+# build in web/out, so a console build never has to be copied into the library.
+STATIC = next((d for d in (Path(__file__).resolve().parent / "static", Path(__file__).resolve().parents[4] / "web" / "out") if d.is_dir()),
+              Path(__file__).resolve().parent / "static")
 
 
 def _get(s: Any, model: Any, id_: str, p: Principal) -> Any:
@@ -1141,7 +1144,7 @@ def dataset_export(body: DatasetIn, p: Principal = Depends(principal)) -> dict[s
 
 class TrainingIn(BaseModel):
     world_version_id: str
-    base_model: str = "Qwen/Qwen3-1.7B"
+    base_model: str = ""
     rounds: int = Field(default=2, ge=1, le=6)
     rollouts_per_scenario: int = Field(default=4, ge=1, le=32)
     serve_base_url: str = "http://127.0.0.1:8001/v1"
@@ -1152,7 +1155,7 @@ class TrainingIn(BaseModel):
 @app.post("/v1/training-jobs", status_code=202)
 def start_training(body: TrainingIn, p: Principal = Depends(principal)) -> dict[str, Any]:
     # Weight training is not built yet; profile improvement (/v1/improvements) is the supported path.
-    raise HTTPException(501, "Training a model on your practice worlds (reinforcement learning) is coming soon. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.")
+    raise HTTPException(501, "Fine-tuning a model on your practice worlds (reinforcement learning) is not built yet. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.")
     with session() as s:
         wv = _get(s, WorldVersion, body.world_version_id, p)
         if wv.status != "published":

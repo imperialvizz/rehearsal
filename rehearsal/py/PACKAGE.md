@@ -22,7 +22,7 @@ Python 3.11 or newer. Running a server needs Linux with Docker; the client runs 
 
 ## Use Rehearsal
 
-Sign in to the hosted service at https://rehearsalkit.xyz, or to a server of your own with `--url`:
+Sign in to the server on this machine (http://localhost:7800, started with `rehearsal serve`), or to another with `--url`:
 
 ```bash
 rehearsal login                               # opens the console in your browser; approve the code shown
@@ -31,7 +31,7 @@ rehearsal login                               # opens the console in your browse
 rehearsal apps add my-app --git https://github.com/you/app --commit <sha> \
   --image web=registry.example.com/app@sha256:<digest>
 rehearsal build <app_id> --watch            # compile a practice world
-rehearsal profiles create support-agent --prompt-file prompt.md --model meta:muse-spark-1.3#medium
+rehearsal profiles create support-agent --prompt-file prompt.md
 rehearsal eval <world_version_id> --profile <profile_id> --watch
 ```
 
@@ -81,11 +81,11 @@ Hosted billing retains a top-up's credits while its invoice line remains partly 
 
 ## Build packages from source
 
-This package lives in `rehearsal/py/` of the repository; the npm package is in `rehearsal/ts/`. Build the console before creating a release; `rehearsal/py/rehearsal/api/static/` is generated and ignored by Git. Run these commands from the repository root:
+This package lives in `rehearsal/py/` of the repository; the npm package is in `rehearsal/ts/`. Build the console into the package before creating a release (`pnpm --dir web package`); `rehearsal/py/rehearsal/api/static/` is generated and ignored by Git. In a clone, the server serves the console from `web/out` instead. Run these commands from the repository root:
 
 ```bash
 pnpm --dir web install --frozen-lockfile
-pnpm --dir web build
+pnpm --dir web package
 python -m build rehearsal/py
 python -m twine check --strict rehearsal/py/dist/*
 ```
@@ -96,4 +96,4 @@ Console fonts are included locally under their SIL Open Font License; the build 
 
 ## Status
 
-Alpha. World compilation, evaluation, comparison, and improvement work end to end; training a model with reinforcement learning is coming soon, and standalone bundle replay is not part of this release.
+Alpha. World compilation, evaluation, comparison, and improvement work end to end; fine-tuning a model with reinforcement learning is not built yet, and standalone bundle replay is not part of this release.

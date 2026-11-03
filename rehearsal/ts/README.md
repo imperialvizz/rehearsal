@@ -13,11 +13,11 @@ npm install rehearsal-kit      # or: pnpm add rehearsal-kit / bun add rehearsal-
 npx rehearsal-kit --help       # the `rehearsal` command, without installing
 ```
 
-Node.js 20 or newer. The package is the client: it talks to a Rehearsal server, the hosted service at https://rehearsalkit.xyz or one of your own. Running a server is the Python package, `pip install "rehearsal-kit[server]"`.
+Node.js 20 or newer. The package is the client: it talks to a Rehearsal server, by default the one on this machine at http://localhost:7800. Running a server is the Python package, `pip install "rehearsal-kit[server]"`.
 
 ## Use Rehearsal
 
-Sign in to the hosted service, or to a server of your own with `--url`:
+Sign in to the server on this machine, or to another with `--url`:
 
 ```bash
 rehearsal login                               # opens the console in your browser; approve the code shown
@@ -26,7 +26,7 @@ rehearsal login                               # opens the console in your browse
 rehearsal apps add my-app --git https://github.com/you/app --commit <sha> \
   --image web=registry.example.com/app@sha256:<digest>
 rehearsal build <app_id> --watch            # compile a practice world
-rehearsal profiles create support-agent --prompt-file prompt.md --model meta:muse-spark-1.3#medium
+rehearsal profiles create support-agent --prompt-file prompt.md
 rehearsal eval <world_version_id> --profile <profile_id> --watch
 ```
 
@@ -82,4 +82,4 @@ The build copies the application catalog and the agent skill from the Python pac
 
 ## Status
 
-Alpha. World compilation, evaluation, comparison, improvement, the Agent Factory and the CI gate work end to end; training a model with reinforcement learning is coming soon.
+Alpha. World compilation, evaluation, comparison, improvement, the Agent Factory and the CI gate work end to end; fine-tuning a model with reinforcement learning is not built yet.

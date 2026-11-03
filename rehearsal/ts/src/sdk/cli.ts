@@ -151,7 +151,7 @@ const SERVER_ONLY = (name: string) => async () => fail(
   `'rehearsal ${name}' runs a Rehearsal server, which is the Python package:\n  pip install "rehearsal-kit[server]"\n  rehearsal ${name}\n` +
   "The TypeScript package is the client: it signs in to, builds on and evaluates with a running server.");
 
-const COMING_SOON = (message: string) => async () => fail(message);
+const NOT_BUILT = (message: string) => async () => fail(message);
 
 export const COMMANDS: Record<string, Cmd> = {
   up: { summary: "apply database migrations; starts a local database in Docker only when no cloud database is set", run: SERVER_ONLY("up") },
@@ -394,11 +394,11 @@ export const COMMANDS: Record<string, Cmd> = {
       console.log(`saved ${events.length} events to ${a.dest}` + (events.length ? "" : " (a replay holds build and episode activity; this job or run has none yet)"));
     },
   },
-  train: { summary: "train a model on a world with reinforcement learning", args: ["wv_id"],
-           opts: { "base-model": { type: "string", default: "Qwen/Qwen3-1.7B" }, rounds: { type: "string", default: "2" }, rollouts: { type: "string", default: "4" }, "serve-url": { type: "string", default: "http://127.0.0.1:8001/v1" } },
-           run: COMING_SOON("Training a model on your practice worlds (reinforcement learning) is coming soon. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.") },
-  "run-bundle": { summary: "start a world from an exported bundle on your own machine", args: ["bundle"],
-                  run: COMING_SOON("Starting a world from a bundle on your own machine is coming soon. Today, evaluate the published world through the server: rehearsal eval <world_version_id> --profile <agent_id>.") },
+  train: { summary: "fine-tune a model on a world with reinforcement learning", args: ["wv_id"],
+           opts: { "base-model": { type: "string", default: "" }, rounds: { type: "string", default: "2" }, rollouts: { type: "string", default: "4" }, "serve-url": { type: "string", default: "http://127.0.0.1:8001/v1" } },
+           run: NOT_BUILT("Fine-tuning a model on your practice worlds (reinforcement learning) is not built yet. Every episode already ends with a verified score from the application's database; today you can export verified episodes as a dataset with `rehearsal export`, and improve an agent's instructions with `rehearsal improve`.") },
+  "run-bundle": { summary: "start a world from an exported bundle on your own machine (not built yet)", args: ["bundle"],
+                  run: NOT_BUILT("Starting a world from a bundle on your own machine is not built yet. Today, evaluate the published world through the server: rehearsal eval <world_version_id> --profile <agent_id>.") },
 };
 
 const REPLAY_TYPES = new Set(["compiler.tool", "compiler.note", "compiler.submit.accepted", "compiler.submit.rejected", "compiler.phase.started", "compiler.phase.completed",
@@ -410,10 +410,10 @@ export const GROUPS: [string, string[]][] = [
   ["Start", ["login", "whoami", "logout"]],
   ["Applications and worlds", ["apps", "build", "worlds", "jobs"]],
   ["Agents and evaluations", ["profiles", "eval", "runs", "compare", "improve", "autofix", "factory", "gate"]],
-  ["Data", ["export", "artifacts", "export-example", "export-replay"]],
+  ["Data", ["export", "artifacts", "export-example", "export-replay", "run-bundle"]],
   ["AI assistants", ["mcp", "skill"]],
   ["Run your own server", ["serve", "worker", "up", "migrate", "bootstrap", "users", "openapi", "prices"]],
-  ["Coming soon", ["train", "run-bundle"]],
+  ["Fine-tuning", ["train"]],
 ];
 
 function pick(o: Json, ...keys: string[]): Json {
