@@ -16,7 +16,10 @@ if (!env.NEXT_PUBLIC_ASSISTANT_URL) {
   }
 }
 
-const next = spawn(process.execPath, [fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url)), "dev", ...process.argv.slice(2)], { stdio: "inherit", env });
+// the docs sit next to the console (7800) on 7801, clear of the many tools that take 3000; `-p` chooses another port
+const args = process.argv.slice(2);
+if (!args.some((a) => a === "-p" || a === "--port" || a.startsWith("--port="))) args.push("-p", "7801");
+const next = spawn(process.execPath, [fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url)), "dev", ...args], { stdio: "inherit", env });
 const stop = () => next.kill();
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);

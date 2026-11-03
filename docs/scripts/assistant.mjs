@@ -88,7 +88,7 @@ export function settings(env = process.env) {
     usable: entries.filter((e) => e.ready),
     port: number("DOCS_ASSISTANT_PORT", 4311),
     host: get("DOCS_ASSISTANT_HOST") || "127.0.0.1",
-    origins: (get("DOCS_ASSISTANT_ORIGINS") || "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4310,http://127.0.0.1:4310")
+    origins: (get("DOCS_ASSISTANT_ORIGINS") || "http://localhost:7801,http://127.0.0.1:7801,http://localhost:3000,http://127.0.0.1:3000,http://localhost:4310,http://127.0.0.1:4310")
       .split(",")
       .map((o) => o.trim().replace(/\/$/, ""))
       .filter(Boolean),
