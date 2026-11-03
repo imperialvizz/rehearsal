@@ -39,6 +39,8 @@ jobs:
       DODO_PAYMENTS_WEBHOOK_KEY: ""
       LITELLM_API_KEY: ""
       REHEARSAL_ENV_FILE: /dev/null
+      # The library has no default model. The Agent Factory API test packages an agent on this chain; no call is made.
+      REHEARSAL_MODEL_AGENT: "openai:model-a#low"
       # The sandbox test pulls a third-party application image and boots it; it runs on developer machines.
       REHEARSAL_DOCKER_TESTS: "0"
     steps:
