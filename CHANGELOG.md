@@ -3,19 +3,56 @@
 Every release of `rehearsal-kit` has a section here. The publish workflow refuses a release whose version has no
 section, so write it before tagging.
 
-## Unreleased
+## 0.1.4
 
-- Every role runs on Meta's Muse models by default: Muse Spark 1.3 on the Meta Model API (`MODEL_API_KEY`), Muse
-  Wonder 1.0 for the hardest compiler roles and the fix loop, on the Meta Model API. New providers `meta` and `baseten`; `nebius` and `nvidia` are removed.
-- Muse only: every default chain needs only `MODEL_API_KEY`. The agent under test runs on one model per run, and
-  the simulated customer on Muse Spark's Contributor tier (`muse-spark-1.3-contributor`), with Standard behind it.
-  A provider without a key no longer stops a chain from waiting out another provider's rate limit.
-- `scripts/install-muse-code.sh` adds the Rehearsal plugin to Muse Code; the docs have a Muse Code page.
+- Test any agent by its URL: an agent profile can name your own agent's OpenAI-compatible endpoint instead of a model
+  (`rehearsal profiles create --endpoint URL [--endpoint-model NAME] [--endpoint-key-env VAR]`, the console's "My own
+  agent runs at a URL" option, and `endpoint_url` / `endpoint_model` on the MCP `create_agent` tool). Each turn sends
+  the conversation and the offered tools to that endpoint, and Rehearsal pays nothing for those calls. The key is
+  stored sealed, and private or internal addresses are refused unless the server sets
+  `REHEARSAL_ALLOW_PRIVATE_AGENT_URLS`.
+- Incidents become tests: describe something an agent got wrong in production and Rehearsal writes a validated job
+  that puts an agent in the same spot, then adds it to the world's dev split (`rehearsal worlds incident WV_ID --file
+  incident.txt`, `rh.worlds.report_incident` / `rh.worlds.reportIncident`, `POST /v1/world-versions/{id}/incidents`,
+  and an Incidents tab on the world page).
+- Ready-made worlds: a server can share one project's published worlds with every workspace
+  (`REHEARSAL_LIBRARY_PROJECT`), listed by `rehearsal worlds library`, `rh.worlds.library` and `GET /v1/library`, and
+  shown on the Applications page.
+- Builds that do not burn money: tools are checked one at a time, a step that keeps getting the same rejection pauses
+  itself, and the build page shows what each step cost and why a build is stuck. A worker that is stopped mid-build
+  hands the job back, and the build resumes from its checkpoint without losing an attempt.
+- Tavily now also helps while a build runs: setup notes from the application's own docs before the runtime is
+  planned, docs search for the builder and the seeder, and a web lookup for an application error that keeps coming
+  back. Rehearsal's own validation messages are never searched.
+- Builds survive more real applications: a build goes back to the runtime when the app does not serve its own API or
+  a one-shot command started a server, back to seeding when tool examples find no records, seed steps can post forms
+  and run queries, and a setup step must name one of the world's services. Built-in tools listed in `contact_tools`
+  are dropped instead of rejected.
+- Customer replies are checkable: what the agent sends the customer becomes a row of the effects journal (provider
+  `customer`, operation `reply`), so a job's checks can read it. When no job passes validation, the build writes the
+  jobs again once from the same plan, with a fresh round for the money guard.
+- A provider without a key no longer makes a model chain wait out another provider's rate limit.
+- The library names no model vendor and no default model. A project chooses each role's chain in the
+  `REHEARSAL_MODEL_*` settings (a role left empty uses the compiler's chain), adds providers beyond the built-in ones
+  in `REHEARSAL_PROVIDERS` (address, the setting that holds the key, and an optional `tool_choice`), and prices them
+  in `pricing.yaml`. Provider `baseten` is added; `nebius` and `nvidia` are removed.
+- This repository's `.env.example` runs every role on Meta's Muse models through the Meta Model API
+  (`MODEL_API_KEY`): Muse Wonder 1.0 for the hardest compiler roles and the fix loop, Muse Spark 1.3 for tool work and
+  for the agent under test (one model per run), and Muse Spark's Contributor tier for the simulated customer, with
+  Standard behind it. `pricing.yaml` holds the Meta Model API prices.
 - A chain entry ends in `#minimal`, `#low`, `#medium`, `#high`, `#xhigh` or `#max`, sent as `reasoning_effort`.
   `#think` and `#nothink` are removed.
-- Meta Model API prices are built in. The Agent Factory's `agent.py` runs on Muse Spark (`MODEL_API_KEY`).
-- A Muse Code bundle in `agent-plugin/providers/muse-code/`: the Rehearsal skill and the MCP server settings.
-- Rehearsal runs from source on one machine; the self-hosting docs say how.
+- The Agent Factory's `agent.py` runs on the server's agent model, at that model's own API address (`MODEL_API_KEY`).
+- `rehearsal train` says that fine-tuning is not built yet; `--base-model` has no default.
+- The clients and the CI action default to the server on this machine, `http://localhost:7800`.
+- In a clone, the server serves the console from `web/out`; `pnpm --dir web package` bundles it into the Python
+  package for a release.
+- `scripts/setup.sh` and `scripts/run-world.sh` set up Rehearsal on one machine and build a world;
+  `scripts/install-muse-code.sh` adds the Rehearsal plugin to Muse Code, from the bundle in
+  `agent-plugin/providers/muse-code/`.
+- Seven more applications in the catalog.
+- Docker and git output is read as UTF-8, and the CLI no longer stops on a character the Windows code page cannot
+  print.
 
 ## 0.1.3
 
