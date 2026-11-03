@@ -119,7 +119,7 @@ def _git_head(dest: Path, expected: str | None) -> str:
 
 
 def _git(cmd: list[str], timeout: float = 300) -> str:
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
     if proc.returncode != 0:
         raise SourceError(f"{' '.join(cmd[:3])} failed: {proc.stderr[-1000:]}")
     return proc.stdout

@@ -46,7 +46,8 @@ class RuntimeError_(Exception):
 
 
 def _run(args: list[str], *, timeout: float = 600, check: bool = True, input_: str | None = None) -> subprocess.CompletedProcess:
-    proc = subprocess.run(args, capture_output=True, text=True, timeout=timeout, input=input_)
+    # UTF-8 everywhere: Windows would decode docker output in its ANSI code page and lose it
+    proc = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout, input=input_)
     if check and proc.returncode != 0:
         raise RuntimeError_(f"{' '.join(args[:4])}... failed ({proc.returncode}): {(proc.stderr or proc.stdout)[-2000:]}")
     return proc
