@@ -260,6 +260,18 @@ class BuildFailed(Exception):
 # Roles whose mistakes are the most expensive run on the reasoner chain: designing jobs (a bad job poisons every
 # evaluation), judging failed validations, and repairing a runtime that would not start. The rest is tool-heavy work.
 REASONING_ROLES = {"scenario_designer", "validation_investigator", "builder_repair"}
+# Shared by the Scenario Designer and the Validation Investigator, so a repair knows what the design rules allowed.
+REPLY_CHECKS = (
+    "Every reply_to_customer is a row of the effects journal with provider 'customer', operation 'reply' and request_json "
+    "{\"actor\": ..., \"text\": ...}, so check a report or answer with SELECT COUNT(*) FROM effects WHERE provider='customer' AND "
+    "operation='reply' AND lower(request_json) LIKE '%word%' (source effects), matching one short distinctive word or title, never "
+    "a whole sentence; check a leak with the same query, op == and value 0. "
+)
+SETUP_STEPS = (
+    "A setup step names one of the world's services exactly as listed, and an http step reaches it signed in as nobody: send the "
+    "auth header yourself, copied from a role's credential (for example headers {\"Authorization\": \"Bearer {{vars.NAME}}\"} with a "
+    "token from the seed variables), and use the HTTP method the application's API documents for creating that record. "
+)
 
 
 class Compiler:
@@ -516,8 +528,30 @@ class Compiler:
                     "Change the runtime for exactly that (an environment variable, a setting file, a setup command in the oneshot service) "
                     "and keep everything else that already works."))
                 return self.run()
+            except BuildFailed:
+                if phase != "package" or "author" in self.ck.get("rewound", []):
+                    raise
+                self._rewind_to_author()
+                return self.run()
             self.mark(phase)
         return self.ck["package"]
+
+    def _rewind_to_author(self) -> None:
+        """No job passed validation: write every job again, once per build, from the same plan. A restart of a build
+        that failed this way comes back here too, so fixes to the design rules reach the jobs."""
+        self.log("compiler.repair", "no job passed validation; writing the jobs again from the same plan", {"phase": "author"})
+        for key in ("scenarios", "reports", "repairs"):
+            self.ck.pop(key, None)
+        memory = self.ck.get("rejected", {})
+        for key in [k for k in memory if k.startswith(("scenario_designer:", "validation_investigator:"))]:
+            memory.pop(key)  # their last submissions were written under the rules that just failed
+        self.ck.setdefault("rewound", []).append("author")
+        self.ck["done"] = [p for p in self.ck.get("done", []) if PHASES.index(p) < PHASES.index("author")]
+        for phase in ("author", "validate"):  # a fresh round for the money guard; the old rejections stay on the build page
+            worst = max((r["count"] for r in self.ck.get("stuck", {}).get(phase, {}).values()), default=0)
+            spent = self.ck.get("spend_by_step", {}).get(phase, 0.0)
+            self.ck.setdefault("guard", {})[phase] = {"repeats": worst + GUARD_REPEATS, "spend": spent + GUARD_SHARE * self.budget if self.budget else None}
+        self.save()
 
     def _rewind(self, phase: str, reason: str) -> bool:
         """Tool adaptation cannot repair what the seed step made. When it is stopped by sign-in or permission errors, or
@@ -1297,14 +1331,16 @@ class Compiler:
             "revisions delivered by scheduled events; most scenarios should change intent at least once); checks - each a single read-only SQL "
             "statement returning one row and one column - against the application database (source app; real table/column names from "
             "describe_table) or the effects journal (source effects; SQLite over effects(provider, operation, idempotency_key, reference, "
-            "amount, status, request_json, response_json, created_at)) for emails/webhooks; hard constraints for what must never happen "
+            "amount, status, request_json, response_json, created_at)) for emails/webhooks and for what the agent told the customer; "
+            "hard constraints for what must never happen "
+            "(constraints is a list of check ids, never sentences: write each rule as a check, then list its id; every goal version lists at least one check id) "
             "(duplicates, wrong record, unauthorized change, leaking private data); a reference trajectory of tool calls that achieves the final "
             "goal; and at least two negative trajectories a careless agent would plausibly do (ignore the revision, retry a write blindly after "
             "an unknown outcome, act on the wrong record, stop early) that the checks must reject. In SQL use :name parameters for seed "
             "variables. In trajectory args use {{vars.NAME}}; use {{ops.N}} for the operation id produced by step N (1-based) when retrying it. "
             "Events: trigger at_step / after_tool / after_customer_reply; actions customer_message, goal_change (with the customer's words), "
             "fault (drop_response makes a write look timed out after it succeeded; error makes it fail), revoke_tool/grant_tool. Scenario "
-            "setup may add records with seed steps (http/exec) and save new vars. The customer talks over the message bus (participant "
+            "setup may add records with seed steps (http/exec) and save new vars. " + SETUP_STEPS + REPLY_CHECKS + "The customer talks over the message bus (participant "
             "channel bus, agents answer with reply_to_customer), unless the application has customer-facing tools, in which case use channel "
             "app with the customer role's send tool. Assign each scenario a family and split (train/dev/holdout) so no family spans two splits. "
             "Write checks that distinguish success from the negatives, and make sure the goal is NOT already satisfied in the seeded state. "
@@ -1328,6 +1364,7 @@ class Compiler:
             "check with a hard rule (constraints) that the forbidden thing did not happen; the legitimate part of the request is the goal."
         )
         context = (
+            f"Services (the service of a setup step): {[s.name for s in manifest.services]}\n\n"
             f"World roles:\n{dumps(manifest.model_dump(mode='json')['roles'])}\n\nTools:\n{tools_text}\n\nSeed variables:\n{dumps(variables)}\n\n"
             f"Workflows and business rules from inspection:\n{dumps(self.ck['inspection'].get('workflows'))}\n\nOwner policies:\n{self.app.policies or '(none)'}\n\n"
             f"Idempotent tools (retry_operation available): {manifest.capabilities.idempotent_tools}\n\nScenarioSpec schema:\n{dumps(ScenarioSpec.model_json_schema())}"
@@ -1490,9 +1527,13 @@ class Compiler:
                 "instructions and the customer's messages was failed unfairly. Then make the job fair, as the audit describes: accept "
                 "every correct way of doing what the customer asked (count records created during the episode with :episode_started_s / "
                 ":episode_started_ms / :episode_started_at instead of requiring a seeded id), and make sure each id the job needs can "
-                "be found by the agent (add the read step to the reference, or say it in the instructions). Keep the negatives rejected."
+                "be found by the agent (add the read step to the reference, or say it in the instructions). Keep the negatives rejected. "
+                + SETUP_STEPS + REPLY_CHECKS
             )
-            user = f"Evidence:\n{holder['report'].feedback()}\n\nCurrent scenario:\n{dumps(holder['scenario'].model_dump(mode='json'))}\n\nSeed variables:\n{dumps(variables)}\n\nTools:\n" + "\n".join(
+            user = (f"Evidence:\n{holder['report'].feedback()}\n\nCurrent scenario:\n{dumps(holder['scenario'].model_dump(mode='json'))}\n\n"
+                    f"Services (the service of a setup step): {[s.name for s in manifest.services]}\n\n"
+                    f"Role credentials:\n{dumps({r.name: r.model_dump(mode='json').get('credential') for r in manifest.roles})}\n\n"
+                    f"Seed variables:\n{dumps(variables)}\n\nTools:\n") + "\n".join(
                 f"- {t.name}: {t.description[:200]} params {json.dumps(t.json_schema()['properties'])[:400]}" for t in manifest.tools
             )
             submit = Tool("submit_revision", "Submit the corrected scenario; it is fully re-validated.", params({"scenario": {"type": "object"}}), accept)
@@ -1518,7 +1559,8 @@ class Compiler:
         reports = self.ck.get("reports", {})
         valid = {sid: raw for sid, raw in self.ck["scenarios"].items() if reports.get(sid, {}).get("ok")}
         if not valid:
-            raise BuildFailed("no scenario passed validation; the world cannot be published")
+            again = " after the jobs were written twice" if "author" in self.ck.get("rewound", []) else ""
+            raise BuildFailed(f"no scenario passed validation{again}; the world cannot be published")
         manifest = self.manifest()
         coverage = Counter(t for sid in valid for t in reports[sid].get("tools_used", []))
         caps = manifest.capabilities.model_copy(update={"tool_coverage": {t.name: coverage.get(t.name, 0) for t in manifest.tools if t.mutating}})
@@ -1589,5 +1631,5 @@ def _edge_locked(inst: WorldInstance) -> bool:
 def _network_internal(inst: WorldInstance) -> bool:
     import subprocess
 
-    out = subprocess.run(["docker", "network", "inspect", "-f", "{{.Internal}}", f"{inst.prefix}-int"], capture_output=True, text=True)
+    out = subprocess.run(["docker", "network", "inspect", "-f", "{{.Internal}}", f"{inst.prefix}-int"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     return out.stdout.strip() == "true"

@@ -13,7 +13,8 @@ const RULES: [RegExp, string][] = [
   [/without an accepted submit_runtime/i, "The compiler couldn't get the application to start in the sandbox."],
   [/same problem came back/i, "The compiler met the same problem several times at one step, so it stopped early instead of spending more."],
   [/without an accepted submit_(\w+)|output rejected \d+ times/i, "A compiler step ran out of attempts."],
-  [/could not be started|BuildFailed/i, "The application didn't start in the sandbox after several repair attempts. Check that the images are complete and pinned."],
+  [/no scenario passed validation/i, "None of the jobs the compiler wrote passed validation, so there was nothing to publish. The list above shows why each job was rejected."],
+  [/could not be started/i, "The application didn't start in the sandbox after several repair attempts. Check that the images are complete and pinned."],
   [/lease expired|worker loss|claim lost|lease lost/i, "The worker running this job stopped."],
   [/budget/i, "The job reached its model-spend budget and stopped."],
   [/cancel|stop requested/i, "Stopped on request."],
@@ -33,6 +34,8 @@ const NEXT: [RegExp, boolean, string][] = [
   [/rate.?limit|\b429\b|too many requests|model unavailable|all models in chain failed/i, true, "Wait a few minutes, then use Restart build. It continues from the last saved step."],
   [/budget/i, false, "Start a new build with a higher budget."],
   [/same problem came back/i, false, "Restart build is unlikely to help: it would meet the same problem. Use Build new version on the Applications page; it starts from the first step."],
+  [/written twice/i, false, "Restart build will not help: the jobs were already written twice in this build. Use Build new version on the Applications page."],
+  [/no scenario passed validation/i, true, "Use Restart build once: it writes the jobs again from the same plan, then validates them. The steps before it are not repeated."],
   [/without an accepted submit_|output rejected \d+ times|could not be started|BuildFailed/i, true, "Use Restart build once; it continues from the last saved step. If it stops at the same step again, more restarts will not help: use Build new version on the Applications page."],
 ];
 

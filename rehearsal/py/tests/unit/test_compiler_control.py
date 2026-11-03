@@ -129,6 +129,26 @@ def test_build_goes_back_to_seed_when_adaptation_is_blocked_by_sign_in_errors():
     assert Compiler._rewind(SimpleNamespace(ck={"seed": {}}, save=None, log=None), "adapt", "you submitted 48 tools; submit between 3 and 40") is False
 
 
+def test_a_build_with_no_valid_job_writes_the_jobs_again_once(tmp_path):
+    from rehearsal.compiler.pipeline import PHASES, AppInput, BuildFailed, Compiler
+
+    ck = {"done": PHASES[:-1], "scenario_plan": [{"id": "s1"}], "scenarios": {"s1": {}}, "reports": {"s1": {"ok": False}},
+          "repairs": [{"scenario": "s1"}], "rejected": {"scenario_designer:s1": {}, "validation_investigator:s1": {}, "seeder": {}},
+          "stuck": {"validate": {"Scenario s1 failed validation": {"count": 9}}}}
+    c = Compiler(app=AppInput("app", tmp_path), checkpoint=ck, workdir=tmp_path, chain="openai:x", log=lambda *a: None, save=lambda ck: None,
+                 heartbeat=lambda: None, add_cost=lambda usd, tokens=0: None)
+    ran = []
+    c.phase_author = lambda: ran.append("author") or c.ck.setdefault("scenarios", {"s1": {}})
+    c.phase_validate = lambda: ran.append("validate")
+    c.instance = lambda: None  # no sandbox: the package step stops before it uses one
+    with pytest.raises(BuildFailed, match="written twice"):
+        c.run()  # the package step finds no valid job, so the jobs are written again; the second failure stops the build
+    assert ran == ["author", "validate"] and ck["rewound"] == ["author"] and ck["scenario_plan"] == [{"id": "s1"}]
+    assert "reports" not in ck and "repairs" not in ck and set(ck["rejected"]) == {"seeder"}
+    # the rewritten jobs get a fresh round from the money guard: 9 old rejections leave 10 more, not 1
+    assert ck["guard"]["validate"]["repeats"] == 19 and ck["guard"]["author"]["repeats"] == 10
+
+
 def _lanes_compiler(monkeypatch, parallel):
     import threading
     from types import SimpleNamespace

@@ -37,6 +37,16 @@ from .llm import LLMError, ToolCall, chat
 CUSTOMER = "customer"
 
 
+def reply_effects(history: list[list[str]], customer: str) -> list[dict[str, Any]]:
+    """The agents' messages to the customer, as journal rows (provider "customer", operation "reply"). A reply over the
+    message bus leaves no record in the application, so this is the only place a check can read what the agent said."""
+    now = datetime.now(timezone.utc).isoformat()
+    replies = [(who, text) for who, text in history if who != customer]
+    return [{"id": f"reply_{i}", "provider": "customer", "operation": "reply", "idempotency_key": None, "reference": who,
+             "amount": None, "status": "sent", "request_json": json.dumps({"actor": who, "text": text}), "response_json": "{}",
+             "created_at": now} for i, (who, text) in enumerate(replies, 1)]
+
+
 # --------------------------------------------------------------------------- state
 
 
@@ -778,6 +788,9 @@ class Engine:
         self.save()
         return self.finish()
 
+    def _reply_effects(self) -> list[dict[str, Any]]:
+        return reply_effects(self.state.customer_history, self.scenario.participant.name)
+
     def finish(self) -> OracleResult:
         st = self.state
         stats = EpisodeStats(
@@ -791,7 +804,7 @@ class Engine:
             environment_error=self.environment_error,
         )
         try:
-            journal = self.instance.journal()
+            journal = self.instance.journal() + self._reply_effects()
             result = evaluate(Prober(self.instance), journal, self.scenario, self.variables, st.goal_version, stats)
         except Exception as exc:  # noqa: BLE001 - an oracle failure is an environment error, not an agent failure
             self.environment_error = stats.environment_error = f"oracle failed: {exc}"[:500]

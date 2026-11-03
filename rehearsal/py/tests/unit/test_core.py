@@ -1,6 +1,8 @@
 """Fast checks for logic that must not regress: contracts, request building,
 read-only SQL guards, and secret redaction. No Docker or network needed."""
 
+import json
+
 import pytest
 from pydantic import ValidationError
 
@@ -11,6 +13,7 @@ from rehearsal.core.contracts import (
     ParticipantSpec,
     RoleSpec,
     ScenarioSpec,
+    SeedStep,
     ServiceSpec,
     ToolParam,
     ToolSpec,
@@ -60,6 +63,29 @@ def test_scenario_cross_checks():
     )
     problems = sc.validate_against(_world())
     assert any("unknown tool delete_everything" in p for p in problems)
+    services = [s.name for s in _world().services]
+    bad = sc.model_copy(update={"setup": [SeedStep(service="no_such_service", path="/x")], "reference": []})
+    assert [p for p in bad.validate_against(_world()) if "setup step" in p] == [
+        f"setup step 1 uses unknown service no_such_service; the services are {sorted(services)}"]
+    good = sc.model_copy(update={"setup": [SeedStep(service=services[0], path="/x")], "reference": []})
+    assert not [p for p in good.validate_against(_world()) if "setup step" in p]
+    named = ScenarioSpec.model_validate({**sc.model_dump(), "reference": [], "contact_tools": ["reply_to_customer", "get_order"]})
+    assert named.contact_tools == ["get_order"] and not [p for p in named.validate_against(_world()) if "contact tool" in p]
+
+
+def test_replies_to_the_customer_can_be_checked_in_the_effects_journal():
+    from rehearsal.agents.episode import reply_effects
+    from rehearsal.evaluator.oracle import run_check
+    from rehearsal.evaluator.probes import effects_connection
+
+    history = [["Dana", "Which tasks are done?"], ["support", "Done: Website redesign."], ["Dana", "Thanks"]]
+    rows = reply_effects(history, "Dana")
+    assert len(rows) == 1 and json.loads(rows[0]["request_json"]) == {"actor": "support", "text": "Done: Website redesign."}
+    effects = effects_connection(rows)
+    count = "SELECT COUNT(*) FROM effects WHERE provider='customer' AND operation='reply' AND lower(request_json) LIKE '%{}%'"
+    said = CheckSpec(id="named", description="d", source="effects", query=count.format("website"), value=1)
+    leaked = CheckSpec(id="leak", description="d", source="effects", query=count.format("token"), value=0)
+    assert run_check(said, None, effects, {})["passed"] and run_check(leaked, None, effects, {})["passed"]
 
 
 def test_gateway_builds_requests_and_rejects_bad_args():

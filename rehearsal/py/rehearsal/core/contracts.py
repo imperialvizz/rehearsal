@@ -519,6 +519,11 @@ class ScenarioSpec(Strict):
     def _slug_id(cls, v: str) -> str:
         return _slug(v)
 
+    @field_validator("contact_tools")
+    @classmethod
+    def _app_tools_only(cls, v: list[str]) -> list[str]:
+        return [t for t in v if t not in BUILTIN_TOOLS]  # reply_to_customer and the other built-ins always count already
+
     @model_validator(mode="after")
     def _references(self) -> "ScenarioSpec":
         check_ids = {c.id for c in self.checks}
@@ -529,13 +534,13 @@ class ScenarioSpec(Strict):
             raise ValueError("goal versions must be 1..n in order")
         for g in self.goals:
             if not g.checks:
-                raise ValueError(f"goal v{g.version} has no checks")
+                raise ValueError(f"goal v{g.version} has no checks; list the ids of the checks that must pass for it")
             missing = set(g.checks) - check_ids
             if missing:
                 raise ValueError(f"goal v{g.version} references unknown checks {sorted(missing)}")
         missing = set(self.constraints) - check_ids
         if missing:
-            raise ValueError(f"constraints reference unknown checks {sorted(missing)}")
+            raise ValueError(f"constraints reference unknown checks {sorted(missing)}; constraints holds check ids, so write each rule as a check and list its id")
         actors = {a.id for a in self.actors}
         if len(actors) != len(self.actors):
             raise ValueError("duplicate actor ids")
@@ -555,6 +560,10 @@ class ScenarioSpec(Strict):
         problems: list[str] = []
         roles = {r.name for r in world.roles}
         tools = {t.name for t in world.tools} | set(BUILTIN_TOOLS)
+        services = {s.name for s in world.services}
+        for i, step in enumerate(self.setup, 1):
+            if step.service not in services:
+                problems.append(f"setup step {i} uses unknown service {step.service}; the services are {sorted(services)}")
         for a in self.actors:
             if a.role not in roles:
                 problems.append(f"actor {a.id} has unknown role {a.role}")
