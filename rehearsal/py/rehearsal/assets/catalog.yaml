@@ -116,3 +116,92 @@ applications:
     images:
       easyappointments: alextselegidis/easyappointments:1.6.0@sha256:ab35b8872d5d3328fa3afb641a89a75f3c6f96f3fb98d6d6d3447fff9d357fa1
       mysql: mysql:8.4@sha256:6ea90827b1100f8f2ae306a539f86d2c264a26ed435a2a9f75551dd5c3aeb242
+
+  # Added 2026-11-03: more domains to rehearse on. Pins are the latest stable release tags on that day.
+  - name: redmine
+    split: development
+    domain: project management and issue tracking
+    license: GPL-2.0-or-later
+    source:
+      kind: git
+      url: https://github.com/redmine/redmine
+      ref: 7.0.3
+      commit: 2600f7fb584b6a0a61d48a29358c76fb7a5ae95a
+    images:
+      # the official image uses SQLite when no database is configured
+      redmine: redmine:7.0.3@sha256:a029fcc48b9794c753cafb9c1085e8d782463c0e06e18f86e55084a31f5a20ab
+
+  - name: kanboard
+    split: development
+    domain: kanban boards and team tasks
+    license: MIT
+    source:
+      kind: git
+      url: https://github.com/kanboard/kanboard
+      ref: v1.2.57
+      commit: 2ddb31bf72d355727d0639fc3423630f3bae1a9c
+    images:
+      kanboard: kanboard/kanboard:v1.2.57@sha256:637989624e5362af2b97bfb4be1936fb6b111ea7cbdffea0ae8bd3068dc84125
+
+  - name: memos
+    split: development
+    domain: notes and knowledge sharing
+    license: MIT
+    source:
+      kind: git
+      url: https://github.com/usememos/memos
+      ref: v0.31.0
+      commit: 2b2192d4e153bd04f1d325b60fd880cf00d68b01
+    images:
+      memos: ghcr.io/usememos/memos:0.31.0@sha256:24c2707ddd8fbd2ceaa7a61ecab86a53cdcde640b24ce572b73da14b00b5785f
+
+  - name: mealie
+    split: development
+    domain: recipes and meal planning
+    license: AGPL-3.0
+    source:
+      kind: git
+      url: https://github.com/mealie-recipes/mealie
+      ref: v3.30.0
+      commit: 9552df62118224a377d9c9b0a62706a62220ab86
+    images:
+      mealie: ghcr.io/mealie-recipes/mealie:v3.30.0@sha256:90f83da6f3ab0a421efc827118a556168573930105f13fa3321768f42163d784
+
+  - name: listmonk
+    split: development
+    domain: newsletters and mailing lists
+    license: AGPL-3.0
+    source:
+      kind: git
+      url: https://github.com/knadh/listmonk
+      ref: v6.2.0
+      commit: ef0a75872463f10a4848af6c547d1c057405453a
+    images:
+      listmonk: listmonk/listmonk:v6.2.0@sha256:f535d59e14991337a9f2d570273685378ae86b0d7698c3e00da444e3bc205286
+      postgres: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+
+  - name: espocrm
+    split: development
+    domain: CRM (leads, contacts, opportunities)
+    license: AGPL-3.0
+    source:
+      kind: git
+      url: https://github.com/espocrm/espocrm
+      ref: 10.0.11
+      commit: 32d559ba86d3be607599d1325c359668c1178850
+    images:
+      espocrm: espocrm/espocrm:10.0.11@sha256:8e1c7e97e0a1a08953a86af89c3808cb95410b6a5eb487d1e3475d2c7289357d
+      mariadb: mariadb:11.4@sha256:1292844148b311e4ed4300022a996d39083f415a963e970cf47cad1b3b18e3a6
+
+  - name: snipe-it
+    split: development
+    domain: IT asset management
+    license: AGPL-3.0
+    source:
+      kind: git
+      url: https://github.com/grokability/snipe-it
+      ref: v8.8.3
+      commit: 621e30486a59304f2a5288fb62c4aa91b08e0a84
+    images:
+      snipe-it: snipe/snipe-it:v8.8.3@sha256:eb6d78c1bdae46d15177b149fcc14d7cd795d9f6c17e53dc4d87e04da9653218
+      mariadb: mariadb:11.4@sha256:1292844148b311e4ed4300022a996d39083f415a963e970cf47cad1b3b18e3a6
