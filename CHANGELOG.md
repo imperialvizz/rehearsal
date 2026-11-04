@@ -68,7 +68,7 @@ section, so write it before building. CI builds and checks the packages but neve
 - Agent Factory (`rehearsal factory`, `rh.worlds.make_agent`): drafts an agent for a published world, hardens it with
   the fix loop, proves it on held-out jobs and packages a runnable agent with a proof report.
 - CI checks: `rehearsal gate` passes or fails an agent change next to a baseline, and the GitHub Action
-  (`uses: MitudruDutta/rehearsal@main`) runs it on pull requests.
+  (`uses: imperialvizz/rehearsal@main`) runs it on pull requests.
 - Why episodes failed: named causes per agent, most common first (`rehearsal runs failures`, `rh.runs.failures`,
   `GET /v1/runs/{id}/failures`), on the run page, in the MCP results and in the gate's report.
 - Web research (`TAVILY_API_KEY`): a build studies how real people use the application and bases its jobs on what it

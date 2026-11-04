@@ -13,11 +13,11 @@ Rehearsal is CI for AI agents. It runs your agent on a working copy of your real
 [![PyPI](https://img.shields.io/pypi/v/rehearsal-kit?label=rehearsal-kit&color=2b59d9)](https://pypi.org/project/rehearsal-kit/)
 [![Python](https://img.shields.io/pypi/pyversions/rehearsal-kit?color=2b59d9)](https://pypi.org/project/rehearsal-kit/)
 [![npm](https://img.shields.io/npm/v/rehearsal-kit?label=npm&color=2b59d9)](https://www.npmjs.com/package/rehearsal-kit)
-[![Tests](https://github.com/MitudruDutta/rehearsal/actions/workflows/tests.yml/badge.svg)](https://github.com/MitudruDutta/rehearsal/actions/workflows/tests.yml)
+[![Tests](https://github.com/imperialvizz/rehearsal/actions/workflows/tests.yml/badge.svg)](https://github.com/imperialvizz/rehearsal/actions/workflows/tests.yml)
 [![Docs](https://img.shields.io/badge/docs-localhost%3A7801-2b59d9)](docs/README.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2b59d9)](LICENSE)
 
-[Run it locally](SETUP.md) · [Documentation](docs/README.md) · [Quickstart](#quickstart) · [Built on Muse](#built-on-metas-muse-models) · [Self-hosting](#self-hosting) · [Planning docs](#planning-docs) · [Report a bug](https://github.com/MitudruDutta/rehearsal/issues)
+[Run it locally](SETUP.md) · [Documentation](docs/README.md) · [Quickstart](#quickstart) · [Built on Muse](#built-on-metas-muse-models) · [Self-hosting](#self-hosting) · [Planning docs](#planning-docs) · [Report a bug](https://github.com/imperialvizz/rehearsal/issues)
 
 <img src=".github/assets/rehearsal-hero.webp" alt="The Rehearsal landing page, replaying a real World Compiler build of Gitea" width="900">
 
@@ -166,7 +166,7 @@ rehearsal autofix PROFILE_ID RUN_ID --rounds 3 --watch   # fix it in rounds, pro
 rehearsal gate WV_ID --prompt-file agent.md --name support-agent --baseline-file main-agent.md   # the CI check
 ```
 
-In GitHub Actions, the same check is one step: `uses: MitudruDutta/rehearsal@main`. See [Use Rehearsal in CI](docs/content/guides/use-rehearsal-in-ci.mdx).
+In GitHub Actions, the same check is one step: `uses: imperialvizz/rehearsal@main`. See [Use Rehearsal in CI](docs/content/guides/use-rehearsal-in-ci.mdx).
 
 Add your own application by pinning its source commit and images:
 
@@ -227,7 +227,7 @@ Method names are the Python names in camelCase. See [rehearsal/ts/README.md](reh
 Install the plugin for Claude Code (Codex works the same way with `codex plugin ...`):
 
 ```bash
-claude plugin marketplace add MitudruDutta/rehearsal
+claude plugin marketplace add imperialvizz/rehearsal
 claude plugin install rehearsal@rehearsal
 ```
 
