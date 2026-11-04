@@ -54,8 +54,8 @@ const SETUP_PROMPT = `Set up Rehearsal (${site.repo}) so you can test AI agents 
 
 1. Check that uv is installed (\`uv --version\`). If it is not, install it: https://docs.astral.sh/uv/
 2. Install the Rehearsal plugin for the assistant you are:
-   - Claude Code: run \`claude plugin marketplace add MitudruDutta/rehearsal\`, then \`claude plugin install rehearsal@rehearsal\`
-   - Codex CLI: run \`codex plugin marketplace add MitudruDutta/rehearsal\`, then \`codex plugin add rehearsal@rehearsal\`
+   - Claude Code: run \`claude plugin marketplace add imperialvizz/rehearsal\`, then \`claude plugin install rehearsal@rehearsal\`
+   - Codex CLI: run \`codex plugin marketplace add imperialvizz/rehearsal\`, then \`codex plugin add rehearsal@rehearsal\`
    - Any other assistant: add an MCP server with command \`uvx\` and arguments ["--from", "rehearsal-kit[mcp]>=0.1.1", "rehearsal", "mcp"], and install the skill with \`uvx --from rehearsal-kit rehearsal skill install --dir <your skills folder>\`
 3. Sign me in: run \`uvx --from rehearsal-kit rehearsal login --url ${site.consoleUrl}\`. It opens my browser; I will check the code and approve it.
 4. If the Rehearsal tools are not available yet, tell me to restart you, and stop here.

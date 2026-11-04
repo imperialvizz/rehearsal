@@ -6,9 +6,9 @@ export const site = {
   tagline: "Test your AI agent on a copy of your real application.",
   /** the product version the site describes, read from rehearsal/py/pyproject.toml by scripts/generate_reference.py */
   version: product.version,
-  repo: "https://github.com/MitudruDutta/rehearsal",
+  repo: "https://github.com/imperialvizz/rehearsal",
   /** where the page sources live in the repository, for "Edit this page" */
-  editBase: "https://github.com/MitudruDutta/rehearsal/edit/main/docs/content",
+  editBase: "https://github.com/imperialvizz/rehearsal/edit/main/docs/content",
   /** the address this site is served at (`pnpm dev` in docs/), used in llms.txt and link previews */
   url: (process.env.NEXT_PUBLIC_DOCS_SITE_URL || "http://localhost:7801").replace(/\/$/, ""),
   /** the server's address: `rehearsal serve` on this machine, or another. "Open console" goes to its /app/ (the dashboard, or sign-in) */
