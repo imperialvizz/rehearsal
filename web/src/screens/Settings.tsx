@@ -86,8 +86,8 @@ export function CodingAgents() {
       <div className="grid gap-4">
         {step("1. Sign in from your terminal", <>Opens this console to approve the sign-in. The terminal receives a &quot;Build and evaluate&quot; key, saved for your user only. You can revoke it on the <a className="underline underline-offset-2" href={routes.apiKeys}>API keys</a> page.</>, [login])}
         {step("2a. Muse Code (Meta)", "In your clone of the repository, after scripts/setup.sh: installs the skill and adds the MCP server to ~/.config/muse/settings.json.", ["bash scripts/install-muse-code.sh"])}
-        {step("2b. Claude Code", "Installs the skill and the MCP server.", ["claude plugin marketplace add MitudruDutta/rehearsal", "claude plugin install rehearsal@rehearsal"])}
-        {step("2c. Codex CLI", "Installs the skill and the MCP server.", ["codex plugin marketplace add MitudruDutta/rehearsal", "codex plugin add rehearsal@rehearsal"])}
+        {step("2b. Claude Code", "Installs the skill and the MCP server.", ["claude plugin marketplace add imperialvizz/rehearsal", "claude plugin install rehearsal@rehearsal"])}
+        {step("2c. Codex CLI", "Installs the skill and the MCP server.", ["codex plugin marketplace add imperialvizz/rehearsal", "codex plugin add rehearsal@rehearsal"])}
         <Card>
           <CardHeader>
             <CardTitle>2d. Any other MCP client</CardTitle>
