@@ -49,7 +49,7 @@ uvx --from rehearsal-kit rehearsal login      # or: pip install rehearsal-kit &&
 
 It opens the console in their browser; they check that the code matches the terminal and click **Approve**, and the terminal receives a key with "Build and evaluate" access. `--url <address>` picks the server; `--with-key` pastes a key instead (servers and CI without a browser). The sign-in is saved for this user only, and the MCP server, the CLI and the Python SDK all use it; `REHEARSAL_URL` and `REHEARSAL_API_KEY` in the environment take precedence. `rehearsal whoami` shows which server and workspace are in use.
 
-If the MCP tools are not installed at all, the Rehearsal agent plugin adds them (Claude Code: `claude plugin marketplace add MitudruDutta/rehearsal`, then `claude plugin install rehearsal@rehearsal`), or add the server by hand:
+If the MCP tools are not installed at all, the Rehearsal agent plugin adds them (Claude Code: `claude plugin marketplace add imperialvizz/rehearsal`, then `claude plugin install rehearsal@rehearsal`), or add the server by hand:
 
 ```bash
 claude mcp add rehearsal -- uvx --from "rehearsal-kit[mcp]" rehearsal mcp
