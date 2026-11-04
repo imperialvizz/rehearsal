@@ -17,8 +17,8 @@ Generated (never edit by hand):
                                                     sit next to the Agent Plugins manifest, so it gets its own folder
     agent-plugin/providers/muse-code/               Meta Muse Code bundle: the skill for `muse skills install` and the
                                                     `mcp_servers` block to merge into ~/.config/muse/settings.json
-    .claude-plugin/marketplace.json                 marketplace for `claude plugin marketplace add MitudruDutta/rehearsal`
-    .agents/plugins/marketplace.json                marketplace for `codex plugin marketplace add MitudruDutta/rehearsal`
+    .claude-plugin/marketplace.json                 marketplace for `claude plugin marketplace add imperialvizz/rehearsal`
+    .agents/plugins/marketplace.json                marketplace for `codex plugin marketplace add imperialvizz/rehearsal`
 
 Usage:
     python scripts/build_agent_plugin.py               write the generated files
