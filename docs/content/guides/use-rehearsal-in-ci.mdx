@@ -91,7 +91,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # the baseline is read from main
-      - uses: MitudruDutta/rehearsal@main
+      - uses: imperialvizz/rehearsal@main
         with:
           api-key: ${{ secrets.REHEARSAL_API_KEY }}
           world-version: ${{ vars.REHEARSAL_WORLD_VERSION }}

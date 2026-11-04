@@ -16,7 +16,7 @@ Cursor's local plugins.
 <Tab value="macOS and Linux">
 
 ```bash
-git clone --depth 1 https://github.com/MitudruDutta/rehearsal ~/.rehearsal-src
+git clone --depth 1 https://github.com/imperialvizz/rehearsal ~/.rehearsal-src
 mkdir -p ~/.cursor/plugins/local
 ln -s ~/.rehearsal-src/agent-plugin ~/.cursor/plugins/local/rehearsal
 ```
@@ -25,7 +25,7 @@ ln -s ~/.rehearsal-src/agent-plugin ~/.cursor/plugins/local/rehearsal
 <Tab value="Windows (PowerShell)">
 
 ```powershell
-git clone --depth 1 https://github.com/MitudruDutta/rehearsal "$HOME\.rehearsal-src"
+git clone --depth 1 https://github.com/imperialvizz/rehearsal "$HOME\.rehearsal-src"
 New-Item -ItemType Directory -Force "$HOME\.cursor\plugins\local" | Out-Null
 New-Item -ItemType Junction -Path "$HOME\.cursor\plugins\local\rehearsal" -Target "$HOME\.rehearsal-src\agent-plugin"
 ```
