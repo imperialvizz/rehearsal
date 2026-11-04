@@ -4,10 +4,10 @@
     "description": "Rehearsal for AI coding agents: build a sandboxed practice world from a real application, run an AI agent through jobs where the customer changes their mind and writes fail, score every attempt against the application's own database, and improve the agent. Includes the Rehearsal skill and MCP server.",
     "author": {
         "name": "Rehearsal",
-        "url": "https://github.com/MitudruDutta/rehearsal"
+        "url": "https://github.com/imperialvizz/rehearsal"
     },
-    "homepage": "https://github.com/MitudruDutta/rehearsal",
-    "repository": "https://github.com/MitudruDutta/rehearsal",
+    "homepage": "https://github.com/imperialvizz/rehearsal",
+    "repository": "https://github.com/imperialvizz/rehearsal",
     "license": "MIT",
     "keywords": [
         "rehearsal",

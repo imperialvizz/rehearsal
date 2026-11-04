@@ -2,7 +2,7 @@
     "name": "rehearsal",
     "owner": {
         "name": "Rehearsal",
-        "url": "https://github.com/MitudruDutta/rehearsal"
+        "url": "https://github.com/imperialvizz/rehearsal"
     },
     "metadata": {
         "description": "Rehearsal plugin marketplace for Claude Code.",
@@ -16,10 +16,10 @@
             "version": "0.1.4",
             "author": {
                 "name": "Rehearsal",
-                "url": "https://github.com/MitudruDutta/rehearsal"
+                "url": "https://github.com/imperialvizz/rehearsal"
             },
-            "homepage": "https://github.com/MitudruDutta/rehearsal",
-            "repository": "https://github.com/MitudruDutta/rehearsal",
+            "homepage": "https://github.com/imperialvizz/rehearsal",
+            "repository": "https://github.com/imperialvizz/rehearsal",
             "license": "MIT",
             "keywords": [
                 "rehearsal",

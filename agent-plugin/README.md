@@ -23,14 +23,14 @@ It opens the console in your browser. Check that the code matches your terminal,
 
 | Client | Install |
 |---|---|
-| Claude Code | `claude plugin marketplace add MitudruDutta/rehearsal` then `claude plugin install rehearsal@rehearsal`. Optional: set the server URL and key in `/config` instead of `rehearsal login` |
-| Codex CLI | `codex plugin marketplace add MitudruDutta/rehearsal` then `codex plugin add rehearsal@rehearsal` |
-| GitHub Copilot CLI | `copilot plugin marketplace add MitudruDutta/rehearsal` then `copilot plugin install rehearsal@rehearsal` |
-| Factory Droid | `droid plugin marketplace add MitudruDutta/rehearsal` then `droid plugin install rehearsal@rehearsal` |
-| Augment (Auggie) | `auggie plugin marketplace add MitudruDutta/rehearsal` then `auggie plugin install rehearsal@rehearsal` |
-| Grok Build | `grok plugin marketplace add MitudruDutta/rehearsal` then `grok plugin install rehearsal --trust` |
-| Cursor | Clone the repository and link the plugin folder: `git clone --depth 1 https://github.com/MitudruDutta/rehearsal ~/.rehearsal-src && ln -s ~/.rehearsal-src/agent-plugin ~/.cursor/plugins/local/rehearsal`, then restart Cursor |
-| Antigravity CLI (`agy`, formerly Gemini CLI) | `git clone --depth 1 https://github.com/MitudruDutta/rehearsal ~/.rehearsal-src && agy plugin install ~/.rehearsal-src/agent-plugin/providers/antigravity`. Antigravity's own manifest format cannot share a folder with the Agent Plugins manifest, so it has a separate bundle. To update, `git pull` and install again |
+| Claude Code | `claude plugin marketplace add imperialvizz/rehearsal` then `claude plugin install rehearsal@rehearsal`. Optional: set the server URL and key in `/config` instead of `rehearsal login` |
+| Codex CLI | `codex plugin marketplace add imperialvizz/rehearsal` then `codex plugin add rehearsal@rehearsal` |
+| GitHub Copilot CLI | `copilot plugin marketplace add imperialvizz/rehearsal` then `copilot plugin install rehearsal@rehearsal` |
+| Factory Droid | `droid plugin marketplace add imperialvizz/rehearsal` then `droid plugin install rehearsal@rehearsal` |
+| Augment (Auggie) | `auggie plugin marketplace add imperialvizz/rehearsal` then `auggie plugin install rehearsal@rehearsal` |
+| Grok Build | `grok plugin marketplace add imperialvizz/rehearsal` then `grok plugin install rehearsal --trust` |
+| Cursor | Clone the repository and link the plugin folder: `git clone --depth 1 https://github.com/imperialvizz/rehearsal ~/.rehearsal-src && ln -s ~/.rehearsal-src/agent-plugin ~/.cursor/plugins/local/rehearsal`, then restart Cursor |
+| Antigravity CLI (`agy`, formerly Gemini CLI) | `git clone --depth 1 https://github.com/imperialvizz/rehearsal ~/.rehearsal-src && agy plugin install ~/.rehearsal-src/agent-plugin/providers/antigravity`. Antigravity's own manifest format cannot share a folder with the Agent Plugins manifest, so it has a separate bundle. To update, `git pull` and install again |
 | Muse Code (Meta) | In a clone set up with `scripts/setup.sh`: `bash scripts/install-muse-code.sh`. It runs `muse skills install agent-plugin/providers/muse-code/skills/rehearsal --scope user` and adds the clone's `rehearsal mcp` to `mcp_servers` in `~/.config/muse/settings.json` (the old file is kept as `settings.json.bak`). Without a clone, copy the `mcp_servers` block of `agent-plugin/providers/muse-code/settings.json`, which starts the server with `uvx`. The server is `optional`, so a missing command only warns |
 | Hermes Agent, OpenClaw, OpenHands, NanoClaw | These load Agent Plugins folders natively: point the client at `agent-plugin/` in a clone of the repository |
 
